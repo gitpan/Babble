@@ -5,6 +5,8 @@ use Test::More;
 
 use Babble;
 
+$main::TZ = "GMT";
+
 eval q{require Babble::DataSource::RSS};
 plan skip_all => 'Problem importing RSS datasource; ' .
 	'probably missing dependencies' if $@;

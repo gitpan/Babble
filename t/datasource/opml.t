@@ -5,6 +5,8 @@ use Test::More;
 
 use Babble;
 
+$main::TZ = "GMT";
+
 eval q{require Babble::DataSource::OPML};
 plan skip_all => 'Problem importing OPML datasource; ' .
 	'probably missing dependencies' if $@;

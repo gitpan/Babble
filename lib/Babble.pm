@@ -27,7 +27,7 @@ use Babble::Processors;
 use Exporter ();
 use vars qw($VERSION @ISA);
 
-$VERSION = '0.06';
+$VERSION = '0.07';
 @ISA = qw(Exporter);
 
 =pod
@@ -104,7 +104,14 @@ argument: a reference to a Babble::DataSource object.
 
 Calling happens after the collect itself ended.
 
+=item -cache
+
+A hashref, containing the options to pass down to
+Babble::Cache->new. See Babble::Cache for details.
+
 =back
+
+As a side-effect, new() will try to load the cache.
 
 =cut
 
@@ -119,8 +126,19 @@ sub new {
 			-processors => [ \&Babble::Processors::default ],
 			-callbacks_collect_start => [],
 			-callbacks_collect_end => [],
-		}
+		},
+		Cache => undef,
 	};
+	my $cache_class = "Babble::Cache::" .
+		($params{-cache}->{-cache_format} || "Dumper");
+
+	eval "use $cache_class";
+	if ($@) {
+		carp $@;
+		return undef;
+	}
+	$self->{Cache} = $cache_class->new (%{$params{-cache}});
+	delete $params{-cache};
 
 	foreach (qw(-processors -callbacks_collect_start
 		    -callbacks_collect_stop)) {
@@ -132,6 +150,10 @@ sub new {
 	map { $self->{Config}->{$_} = $params{$_} } keys %params;
 
 	bless $self, $type;
+
+	$self->Cache->load ();
+
+	return $self;
 }
 
 =pod
@@ -295,6 +317,34 @@ sub search {
 
 =pod
 
+=item Cache ()
+
+Returns the Babble::Cache object stored inside the Babble.
+
+=cut
+
+sub Cache {
+	my $self = shift;
+
+	return $self->{Cache};
+}
+
+=pod
+
+=item DESTROY
+
+Called when the object gets destroyed. It will try to save the cache.
+
+=cut
+
+sub DESTROY {
+	my $self = shift;
+
+	$self->Cache->dump ();
+}
+
+=pod
+
 =back
 
 =head1 PROCESSORS
@@ -324,9 +374,8 @@ Bugs should be reported at L<http://bugs.bonehunter.rulez.org/babble>.
 
 =head1 SEE ALSO
 
-Babble::DataSource(3pm), Babble::Document(3pm),
-Babble::Document::Collection(3pm), Babble::Output(3pm),
-Babble::Theme(3pm), Babble::Processors(3pm)
+Babble::DataSource, Babble::Document, Babble::Document::Collection,
+Babble::Output, Babble::Theme, Babble::Processors, Babble::Cache
 
 =cut
 

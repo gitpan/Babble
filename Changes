@@ -1,5 +1,24 @@
 Changes -- list of user visible changes			-*- outline -*-
 
+* Babble 0.07 -- 2004-04-25
+
+** Babble::Cache made into a proper object
+
+Babble::Cache was made into a proper object, it is not a global hash
+with accessor methods anymore.
+
+** Improved RSS parsing
+
+The RSS DataSource was modified to not let the whole application die
+when the underlying XML::Parser die()s. So-called item hooks were
+also implemented, to be able to store custom data from the feed in
+the Babble::Document object.
+
+** Improved caching
+
+Babble will only cache feeds that are known to be valid (ie,
+parsable).
+
 * Babble 0.06 -- 2004-04-12
 
 ** More forgiving parsing and data handling

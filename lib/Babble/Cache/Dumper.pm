@@ -20,46 +20,81 @@ package Babble::Cache::Dumper;
 
 use strict;
 use Carp;
+use Babble::Cache::Class::Hash;
 use Data::Dumper;
+use vars qw(@ISA);
 
-sub cache_load ($$) {
-	my ($self, $fn, $cdb) = @_;
-
-	$$cdb = do $fn;
-	if ($@) {
-		carp $@;
-		return;
-	}
-	return 1;
-}
-
-sub cache_dump ($$) {
-	my ($self, $fn, $cachedb) = @_;
-
-	$Data::Dumper::Terse = 1;
-
-	unless (open (OUTF, '>' . $fn)) {
-		carp 'Error dumping cache to `' . $fn . '\': ' . $1;
-		return;
-	}
-	print OUTF "# Automatically generated file. Edit carefully!\n";
-	print OUTF Dumper ($$cachedb) . ";\n";
-	close OUTF;
-}
+@ISA = qw(Babble::Cache::Class::Hash);
 
 =pod
 
 =head1 NAME
 
-Babble::Cache::Dumper - Data::Dumper data storage for Babble::Cache
+Babble::Cache::Dumper - Data::Dumper based cache for Babble
 
 =head1 DESCRIPTION
 
-This module implements a storage format for B<Babble::Cache> that uses
-B<Data::Dumper> to store and retrieve the cache.
+This module implements a cache for B<Babble> that uses B<Data::Dumper>
+to store and retrieve the cache. The cache itself is stored in memory
+in a hash (thus, this class is a subclass of
+B<Babble::Cache::Class::Hash>).
 
 The main advantage is human readability, but the stored cache is slow
 to load and save.
+
+=head1 METHODS
+
+=over 4
+
+=item load ()
+
+Load the cache stored in B<Data::Dumper> format from the file
+specified during object creation.
+
+=cut
+
+sub load () {
+	my $self = shift;
+
+	return 1 unless ($self->{-cache_fn} && -e $self->{-cache_fn});
+
+	$self->{cachedb} = do $self->{-cache_fn};
+	if ($@) {
+		carp $@;
+		return undef;
+	}
+	return 1;
+}
+
+=pod
+
+=item dump ()
+
+Save the cache in B<Data::Dumper> format to the file specified during
+object creation.
+
+=cut
+
+sub dump () {
+	my $self = shift;
+
+	return unless $self->{cache_fn};
+
+	$Data::Dumper::Terse = 1;
+
+	unless (open (OUTF, '>' . $self->{-cache_fn})) {
+		carp 'Error dumping cache to `' . $self->{-cache_fn} .
+			'\': ' . $1;
+		return;
+	}
+	print OUTF "# Automatically generated file. Edit carefully!\n";
+	print OUTF Dumper ($self->{cachedb}) . ";\n";
+	close OUTF;
+}
+
+=pod
+
+=back
 
 =head1 AUTHOR
 
@@ -69,7 +104,7 @@ Bugs should be reported at L<http://bugs.bonehunter.rulez.org/babble>.
 
 =head1 SEE ALSO
 
-Data::Dumper(3pm), Babble(3pm), Babble::Cache(3pm)
+Data::Dumper, Babble, Babble::Cache, Babble::Cache::Class::Hash
 
 =cut
 

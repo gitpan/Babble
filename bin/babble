@@ -25,7 +25,6 @@ use Date::Manip;
 use Text::Iconv;
 
 use Babble;
-use Babble::Cache;
 use Babble::Utils;
 use Babble::Processors::Extra;
 use Babble::Encode;
@@ -70,7 +69,6 @@ my @feeds = ();
 my @themes = ();
 my @cbs = ();
 my %babble_config = ();
-my $cache_ok = 0;
 
 foreach my $param ($cfg->Parameters ('Babble')) {
 	my $key = $param;
@@ -84,14 +82,16 @@ foreach my $param ($cfg->Parameters ('Babble')) {
 
 push (@cbs, \&cb_collect_start) if ($verbose >= 2);
 
-print "Loading cache " . $babble_config{cache_db} . "...\n" if ($verbose >= 2);
-$Babble::Cache::cache_format = $babble_config{cache_format}
-	if $babble_config{cache_format};
-if ($babble_config{cache_db}) {
-	die "Cache load failed!\n"
-		unless (Babble::Cache::cache_load ($babble_config{cache_db}));
-	$cache_ok = 1;
-}
+my $babble = Babble->new (
+	-cache => {
+		-cache_fn => $babble_config{cache_fn} ||
+			$babble_config{cache_db},
+		-cache_format => $babble_config{cache_format},
+	},
+	-callbacks_collect_start => \@cbs,
+	-processors => [ \&Babble::Processors::Extra::creator_map,
+		 \&Babble::Processors::Extra::parent_map ],
+);
 
 print "Recording sources ...\n" if ($verbose >= 2);
 
@@ -128,12 +128,6 @@ foreach my $feed (grep (!/^(theme:|babble$)/i, $cfg->Sections)) {
 
 	push (@feeds, "Babble::DataSource::$type"->new (%feed_params));
 }
-
-my $babble = Babble->new (
-	-cache_db => $babble_config{cache_db},
-	-callbacks_collect_start => \@cbs,
-	-processors => [ \&Babble::Processors::Extra::creator_map ],
-);
 
 $babble->add_params (%babble_config);
 $babble->add_sources (@feeds);
@@ -248,7 +242,8 @@ sub htmlfix {
 
 	return unless $$text;
 
-	$$text =~ s/&nbsp;/\&#160;/;
+	$$text =~ s/&nbsp;/\&#160;/g;
+	$$text =~ s/&euro;/\&#8364;/g;
 	$$text =~ s/\&((?!(\w+|#\d+);))/\&amp;$1/g;
 	$$text =~ s/\<([^\s\>\@]*\@[^\>\s]*)\>/\&lt;$1\&gt;/g;
 }
@@ -258,16 +253,6 @@ sub cb_collect_start {
 
 	print ' Collecting: `' . $$source->{-id} . '\' from ' .
 		$$source->{-location} . "\n";
-}
-
-END {
-	if ($cache_ok) {
-		print "Saving cache " . $babble_config{cache_db} . "...\n"
-			if ($verbose >= 2);
-		die "Cache save failed!\n"
-			unless (Babble::Cache::cache_dump
-				  ($babble_config{cache_db}));
-	}
 }
 
 =pod

@@ -46,7 +46,8 @@ Babble::DataSource::OPML - OPML source fetcher for Babble
  $babble->add_sources (
 	Babble::DataSource::OPML->new (
 		-id => "Planet Debian",
-		-location => "http://planet.debian.net/opml.xml"
+		-location => "http://planet.debian.net/opml.xml",
+		-babble => \$babble,
 	)
  );
  ...
@@ -69,6 +70,9 @@ Babble::DataSource::RSS objects.
 Parses the OPML document specified in the I<-location> parameter, and
 returns an array of Babble::DataSource::RSS objects.
 
+If one wants to use the caching provided by Babble, a reference to the
+Babble object should be passed in the I<-babble> parameter.
+
 =cut
 
 sub new {
@@ -77,9 +81,18 @@ sub new {
 	my @sources;
 	my $opml = XML::OPML->new ();
 
-	my $source = Babble::Transport->get (\%params);
+	my $source = Babble::Transport->get (\%params, $params{-babble});
 	return undef unless $source;
 	$opml->parse ($source);
+
+	if ($params{-babble}) {
+		my $babble = $params{-babble};
+		$$babble->Cache->set ('Feeds', $params{-location}, 'feed',
+				      $source);
+		$$babble->Cache->set ('Feeds', $params{-location}, 'time',
+				      UnixDate ("now",
+						"%a, %d %b %Y %H:%M:%S GMT"));
+	}
 
 	foreach my $outline (@{$opml->outline}) {
 		my %nparams = %params;

@@ -72,6 +72,26 @@ sub creator_map {
 
 =pod
 
+=item parent_map()
+
+This processor takes the B<-parent_map> field of the I<source> and
+copies all fields listed in B<-parent_map> from the I<channel>, to the
+current I<item>.
+
+=cut
+
+sub parent_map {
+	my ($item, $channel, $source) = @_;
+
+	return unless defined $$source->{-parent_map};
+
+	map {
+		$$item->{parent}->{$_} = to_utf8 ($$channel->{$_});
+	} @{$$source->{-parent_map}};
+}
+
+=pod
+
 =back
 
 =head1 AUTHOR

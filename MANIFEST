@@ -1,11 +1,11 @@
 bin/babble
-bin/babble-cache
 Build.PL
 Changes
 COPYING
 examples/algernon.ini
 lib/Babble.pm
 lib/Babble/Cache.pm
+lib/Babble/Cache/Class/Hash.pm
 lib/Babble/Cache/Dumper.pm
 lib/Babble/Cache/Storable.pm
 lib/Babble/DataSource.pm
@@ -29,7 +29,6 @@ lib/Babble/Theme/advogato/advogato.html.tmpl
 lib/Babble/Theme/advogato/head.html.tmpl
 lib/Babble/Theme/advogato/main_content.html.tmpl
 lib/Babble/Theme/advogato/sidebar.html.tmpl
-lib/Babble/Theme/babble.png
 lib/Babble/Theme/planet.pm
 lib/Babble/Theme/planet/banner.html.tmpl
 lib/Babble/Theme/planet/head.html.tmpl

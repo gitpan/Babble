@@ -16,7 +16,11 @@
     [% UNLESS template_knob_no_content_links %]
       <a href="[% item.master %]">
     [% END %]
-    [% item.author %]
+    [% UNLESS template_knob_prefer_parent_name %]
+    [%- item.author -%]
+    [% ELSE %]
+    [%- item.parent.name -%]
+    [% END %]
     [% UNLESS template_knob_no_content_links %]
       </a>
     [% END %]

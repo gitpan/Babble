@@ -7,7 +7,7 @@ use lib qw(t/dummy);
 use Babble;
 use Babble::DataSource::FlatFile;
 
-our $TZ="GMT";
+$main::TZ = "GMT";
 
 my $babble = Babble->new ();
 

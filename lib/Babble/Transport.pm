@@ -19,7 +19,6 @@
 package Babble::Transport;
 
 use strict;
-use Babble::Cache;
 use Babble::Transport::LWP;
 use Date::Manip;
 
@@ -47,38 +46,56 @@ classes.
 
 =item get
 
-Return the contents of a given location (given in the I<-location>
-argument) as a string scalar. If a I<-cache_db> argument is given,
-this method will use the given file as a cache - to save successfully
-retrieved feeds and to check the cache if it has an older version, in
-case the feed couldn't be retrieved. Caching is done via
-Babble::Cache.
+Return the contents of a given location, either fetched afresh, or
+from the cach (if any).
 
-If a I<-preprocessors> parameter is given, the result will be filtered
-through the coderefs contained in this arrayref. The function should
-take only one argument: a scalar reference, and operate on that
-in-place.
+This method takes the following parameters:
+
+=over 4
+
+=item -location
+
+The location to fetch the document from.
+
+=item -preprocessors
+
+When specified as an array reference, the freshly fetched document
+will be filtered through each function referenced herein. These
+functions should take only one argument: a scalar reference. And they
+should operate on that, in-place.
+
+=item -cache_only
+
+When this flag is set, only the cache will be used as a source, and
+the original location will not be checked.
+
+=item -babble
+
+In order to use caching, this method needs access to a Babble::Cache
+object. This is done via a Babble object, which should be passed in
+this parameter, as a reference.
+
+When one does not want caching, it can be omitted.
+
+=back
 
 =cut
 
 sub get {
-	my ($self, $params) = @_;
+	my ($self, $params, $babble) = @_;
 	our $cache = {};
 	my $loc = \$params->{-location};
 	my $result;
 
 	$params->{-headers}->{'If-Modified-Since'} =
-		Babble::Cache::cache_get ('Feeds', $$loc, 'time');
+		$$babble->Cache->get ('Feeds', $$loc, 'time')
+			if $babble;
 
 	$result = Babble::Transport::LWP->get ($params) unless
 		$params->{-cache_only};
 
-	$result = Babble::Cache::cache_update (
-		'Feeds', $$loc,
-		{
-			feed => $result,
-			time => UnixDate ("now", "%a, %d %b %Y %H:%M:%S GMT")
-		}, 'feed');
+	$result = $$babble->Cache->get ('Feeds', $$loc, 'feed')
+		unless ($result || !$babble);
 
 	foreach my $preproc (@{$params->{-preprocessors}}) {
 		&$preproc (\$result);

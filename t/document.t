@@ -4,7 +4,7 @@ use Cwd;
 use Date::Manip;
 use Test::More tests => 15;
 
-our $TZ="GMT";
+$main::TZ = "GMT";
 
 use_ok ("Babble::Document");
 

@@ -5,6 +5,8 @@ use Test::More;
 
 use Babble;
 
+$main::TZ = "GMT";
+
 eval q{require Babble::DataSource::Mail};
 plan skip_all => 'Problem importing Mail datasource; ' .
 	'probably missing dependencies' if $@;

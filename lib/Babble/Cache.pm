@@ -21,94 +21,172 @@ package Babble::Cache;
 use strict;
 use Carp;
 
-use vars qw($cachedb $cache_format);
-
-BEGIN {
-	our $cachedb = {};
-	our $cache_format = "Dumper";
-}
-
 =pod
 
 =head1 NAME
 
-Babble::Cache - Global caching infrastructure for Babble
+Babble::Cache - Caching infrastructure for Babble
 
 =head1 DESCRIPTION
 
-This module implements a global cache, a hash that is used to store
-stuff in; and a set of methods to update, query or otherwise
-manipulate the cache. Including loading and saving it, of course.
+This module implements the base Babble::Cache class, one that all
+other cache modules are based upon. It provides all the methods every
+module must support. Some of these will only I<carp> - these need to
+be implemented in subclasses -, some won't have to be touched at all.
 
 =head1 METHODS
 
 Babble::Cache provides the following methods:
 
+=head2 Constructor
+
 =over 4
 
-=item cache_load ($fn)
+=item new (%params)
 
-Loads the file specified in B<$fn>, if exists. The format of the
-database can vary. By default, it is valid perl code, dumped out with
-B<Data::Dumper>, but it can be anything that the B<Babble::Cache::>q
-sub-modules support.
+Creates a new Babble::Cache object. All parameters passed to it, will
+be saved for future use. However, the following parameters are
+recognised by Babble::Cache itself, and are used by the module itself:
+
+=over 4
+
+=item -cache_fn
+
+The filename of the cache. This is required for proper operation,
+provided one is using a cache that is loaded from file.
+
+=back
 
 =cut
 
-sub cache_load ($) {
-	my $fn = shift;
+sub new {
+	my $type = shift;
+	my %params = @_;
+	my $self = {
+		%params,
 
-	return 1 unless ($fn && -e $fn);
+		cachedb => {},
+	};
 
-	eval "use Babble::Cache::$cache_format";
-	if ($@) {
-		carp $@;
-		return undef;
-	}
-	return "Babble::Cache::$cache_format"->cache_load ($fn, \$cachedb);
+	bless $self, $type;
 }
 
 =pod
 
-=item cache_frob ($category, $id, $data [, $keys])
+=back
+
+=cut
+
+=pod
+
+=head2 Methods that need subclass implementation
+
+The following methods need to be implemented in subclasses, as they
+are not generic:
+
+=over 4
+
+=item load ()
+
+This just carps, as loading is not supported by the base class.
+
+=cut
+
+sub load () {
+	my $self = shift;
+
+	carp "$self does not support load";
+}
+
+=pod
+
+=item dump ()
+
+This carps, as saving is not supported by the base class.
+
+=cut
+
+sub dump () {
+	my $self = shift;
+
+	carp "$self does not support dump";
+}
+
+=pod
+
+=item get ($category, $id[, $key])
+
+This carps, therefore must be implemented by subclasses.
+
+=cut
+
+sub get ($$;$) {
+	my $self = shift;
+
+	carp "$self does not support get";
+}
+
+=pod
+
+=item set ($category, $id, $key, $value)
+
+This carps, therefore must be implemented by subclasses.
+
+=cut
+
+sub set ($$$$) {
+	my $self = shift;
+
+	carp "$self does not support set";
+}
+
+=pod
+
+=back
+
+=cut
+
+=pod
+
+=head2 Generic methods
+
+=over 4
+
+=item frob ($category, $id, $data [, $keys])
 
 Frobnicate stuff in the cache. This is a quite complex method, which
 does a few interesting things. First, it looks up if an entry named
 B<$id> exists under the B<$category> in the cache. If it does, all the
 keys listed in the B<$keys> arrayref will be copied over from the
-cache. If the cache does not have the key yet, it will be updated.
-
-If the entry is not found in the cache, the keys listed in B<$keys>
-will be stored in it.
-
-If B<$keys> is not defined, all keys of B<$data> will be used.
+cache. If the cache does not have the key yet, it will be updated. If
+the entry is not found in the cache, the keys listed in B<$keys> will
+be stored in it. If B<$keys> is not defined, all keys of B<$data> will
+be used.
 
 =cut
 
-sub cache_frob ($$$;$) {
-	my ($cat, $id, $data, $keys) = @_;
+sub frob ($$$;$) {
+	my ($self, $cat, $id, $data, $keys) = @_;
 	@$keys = keys %$data unless $keys;
 
-	if ($cachedb->{$cat}->{$id}) {
+	if ($self->get ($cat, $id)) {
 		foreach my $key (@$keys) {
-			if (defined $cachedb->{$cat}->{$id}->{$key}) {
-				$$data->{$key} =
-					$cachedb->{$cat}->{$id}->{$key};
+			if (defined $self->get ($cat, $id, $key)) {
+				$$data->{$key} = $self->get ($cat, $id, $key);
 			} else {
-				$cachedb->{$cat}->{$id}->{$key} =
-					$$data->{$key};
+				$self->set ($cat, $id, $key, $$data->{$key});
 			}
 		}
 	} else {
 		foreach my $key (@$keys) {
-			$cachedb->{$cat}->{$id}->{$key} = $$data->{$key};
+			$self->set ($cat, $id, $key, $$data->{$key});
 		}
 	}
 }
 
 =pod
 
-=item cache_update ($category, $id, $data, $key)
+=item update ($category, $id, $data, $key)
 
 Update the cache with the values of B<$data> when its B<$key> key is
 defined. Otherwise, return the contents of the appropriate entry of
@@ -116,90 +194,35 @@ the cache.
 
 =cut
 
-sub cache_update ($$$$) {
-	my ($cat, $id, $data, $key) = @_;
+sub update ($$$$) {
+	my ($self, $cat, $id, $data, $key) = @_;
 
 	if ($data->{$key}) {
-		$cachedb->{$cat}->{$id} = $data;
+		foreach my $dkey (keys %$data) {
+			$self->set ($cat, $id, $dkey, $data->{$dkey});
+		}
 		return $data->{$key}
 	} else {
-		return $cachedb->{$cat}->{$id}->{$key};
+		return $self->get ($cat, $id, $key);
 	}
 }
 
 =pod
 
-=item cache_get ($category, $id, $key)
+=item cache_fn ([$fn])
 
-Retrieve the value of the B<$key> element in the B<$id> key in the
-B<$category> category of the cache.
-
-=cut
-
-sub cache_get ($$$) {
-	my ($cat, $id, $key) = @_;
-	return $cachedb->{$cat}->{$id}->{$key};
-}
-
-=pod
-
-=item cache_dump ($fn)
-
-Save the cache to the file specified in B<$fn>.
+Get or set the cache file name.
 
 =cut
 
-sub cache_dump ($) {
-	my $fn = shift;
+sub cache_fn (;$) {
+	my ($self, $new_fn) = @_;
 
-	return unless $fn;
-
-	eval "use Babble::Cache::$cache_format";
-	if ($@) {
-		carp $@;
-		return undef;
-	}
-	return "Babble::Cache::$cache_format"->cache_dump ($fn, \$cachedb);
+	$self->{-cache_fn} = $new_fn if $new_fn;
+	return $self->{-cache_fn};
 }
 
 =pod
-
-=back
-
-=head1 VARIABLES
-
-=over 4
-
-=item $Babble::Cache::cache_format
-
-Determines the format of the cache. Values can be I<Dumper>
-(B<Data::Dumper> will be used to dump the database, and require to
-restore it), or I<Storable> (B<Storable> will be used to dump and
-retrieve the data).
-
-Defaults to I<Dumper>, because that is easier to edit by hand, if
-needed.
-
-=back
-
-=head1 STORAGE FORMATS
-
-Storage formats are implemented by B<Babble::Cache> sub-modules. A
-storage module needs to have two methods (both must be callble in an
-OO fashion):
-
-=over 4
-
-=item cache_load
-
-Takes two arguments: the filename to read from (already verified that
-it exists), and a reference to a hashref, where the loaded data must
-be stored.
-
-=item cache_dump
-
-Also takes two arguments: the filename to dump the cache to, and a
-reference to a hashref, containing the data to store.
 
 =back
 
@@ -211,7 +234,8 @@ Bugs should be reported at L<http://bugs.bonehunter.rulez.org/babble>.
 
 =head1 SEE ALSO
 
-Babble(3pm), Babble::Cache::Dumper(3pm), Babble::Cache::Storable(3pm)
+Babble, Babble::Cache::Class::Hash, Babble::Cache::Dumper,
+Babble::Cache::Storable
 
 =cut
 

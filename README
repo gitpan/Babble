@@ -58,6 +58,12 @@ METHODS
 
             Calling happens after the collect itself ended.
 
+        -cache
+            A hashref, containing the options to pass down to
+            Babble::Cache->new. See Babble::Cache for details.
+
+        As a side-effect, new() will try to load the cache.
+
     add_params (%params)
         Add custom paramaters to the Babble object, which might be usable
         for the output generation routines.
@@ -103,6 +109,13 @@ METHODS
 
         See Babble::Document for more information about filters.
 
+    Cache ()
+        Returns the Babble::Cache object stored inside the Babble.
+
+    DESTROY
+        Called when the object gets destroyed. It will try to save the
+        cache.
+
 PROCESSORS
     Processors are subroutines that take four arguments: An *item*, a
     *channel*, a *source*, and a "Babble" object (the caller). All of them
@@ -127,7 +140,6 @@ AUTHOR
     Bugs should be reported at <http://bugs.bonehunter.rulez.org/babble>.
 
 SEE ALSO
-    Babble::DataSource(3pm), Babble::Document(3pm),
-    Babble::Document::Collection(3pm), Babble::Output(3pm),
-    Babble::Theme(3pm), Babble::Processors(3pm)
+    Babble::DataSource, Babble::Document, Babble::Document::Collection,
+    Babble::Output, Babble::Theme, Babble::Processors, Babble::Cache
 

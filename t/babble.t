@@ -1,10 +1,11 @@
 #! perl -w
 use strict;
 use Cwd;
+use Date::Manip;
 use Test::More tests => 12;
 use lib qw(t/dummy);
 
-our $TZ="GMT";
+$main::TZ = "GMT";
 
 # First, check if we can create a Babble object
 use_ok ("Babble");

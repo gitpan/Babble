@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name: Babble
-version: 0.06
+version: 0.07
 author:
   - Gergely Nagy <algernon@bonehunter.rulez.org>
 abstract: RSS Feed Aggregator and Blog engine
@@ -22,9 +22,11 @@ recommends:
 provides:
   Babble:
     file: lib/Babble.pm
-    version: 0.06
+    version: 0.07
   Babble::Cache:
     file: lib/Babble/Cache.pm
+  Babble::Cache::Class::Hash:
+    file: lib/Babble/Cache/Class/Hash.pm
   Babble::Cache::Dumper:
     file: lib/Babble/Cache/Dumper.pm
   Babble::Cache::Storable:

@@ -31,7 +31,7 @@ Module::Build->new (
 			'XML'
 		]
 	},
-	scripts => [ 'bin/babble', 'bin/babble-cache' ],
+	scripts => [ 'bin/babble' ],
 	dist_author => 'Gergely Nagy <algernon@bonehunter.rulez.org>',
 	create_readme => 1,
 	dist_version_from => "lib/Babble.pm",

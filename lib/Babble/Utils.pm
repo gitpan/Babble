@@ -19,7 +19,6 @@
 package Babble::Utils;
 
 use strict;
-use Babble::Cache;
 
 =pod
 
@@ -30,17 +29,18 @@ Babble::Utils - Non-essential Babble extensions and utility methods
 =head1 SYNOPSIS
 
  use Babble::Utils;
- use Babble::Cache;
 
- Babble::Cache::cache_load ('cache.db');
- my $babble = Babble->new (-cache_fields => ['id', 'date']);
+ my $babble = Babble->new (
+	-cache => {
+		-cache_fn => 'cache.db',
+		-cache_fields => ['id', 'date'],
+	},
+ );
 
  ...
  $babble->collect_feeds ();
  $babble->cache ()
  ...
-
- Babble::Cache::cache_dump ('cache.db');
 
 =head1 DESCRIPTION
 
@@ -72,11 +72,11 @@ This is just a wrapper around Babble::Cache, really.
 sub Babble::cache (%) {
 	my ($self, %params) = @_;
 	my $cache_fields = $params{-cache_fields} ||
-		$self->{Config}->{-cache_fields};
+		$self->Cache->{-cache_fields};
 
 	foreach my $item ($self->all) {
-		Babble::Cache::cache_frob ('Items', $item->{id}, \$item,
-					   $cache_fields);
+		$self->Cache->frob ('Items', $item->{id}, \$item,
+				    $cache_fields);
 	}
 }
 
