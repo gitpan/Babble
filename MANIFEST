@@ -1,4 +1,5 @@
 bin/babble
+bin/babble-cache
 Build.PL
 Changes
 COPYING
@@ -15,8 +16,8 @@ lib/Babble/DataSource/OPML.pm
 lib/Babble/DataSource/RSS.pm
 lib/Babble/Document.pm
 lib/Babble/Document/Collection.pm
+lib/Babble/Encode.pm
 lib/Babble/Output.pm
-lib/Babble/Output/HTML.pm
 lib/Babble/Output/RSS.pm
 lib/Babble/Output/TTk.pm
 lib/Babble/Processors.pm
@@ -24,18 +25,18 @@ lib/Babble/Processors/Extra.pm
 lib/Babble/Theme.pm
 lib/Babble/Theme/advogato.pm
 lib/Babble/Theme/advogato/advogato.css
-lib/Babble/Theme/advogato/advogato.tmpl
-lib/Babble/Theme/advogato/head.tmpl
-lib/Babble/Theme/advogato/main_content.tmpl
-lib/Babble/Theme/advogato/sidebar.tmpl
+lib/Babble/Theme/advogato/advogato.html.tmpl
+lib/Babble/Theme/advogato/head.html.tmpl
+lib/Babble/Theme/advogato/main_content.html.tmpl
+lib/Babble/Theme/advogato/sidebar.html.tmpl
 lib/Babble/Theme/babble.png
 lib/Babble/Theme/planet.pm
-lib/Babble/Theme/planet/banner.tmpl
-lib/Babble/Theme/planet/head.tmpl
-lib/Babble/Theme/planet/main_content.tmpl
+lib/Babble/Theme/planet/banner.html.tmpl
+lib/Babble/Theme/planet/head.html.tmpl
+lib/Babble/Theme/planet/main_content.html.tmpl
 lib/Babble/Theme/planet/planet.css
-lib/Babble/Theme/planet/planet.tmpl
-lib/Babble/Theme/planet/sidebar.tmpl
+lib/Babble/Theme/planet/planet.html.tmpl
+lib/Babble/Theme/planet/sidebar.html.tmpl
 lib/Babble/Theme/planet_gray.pm
 lib/Babble/Theme/planet_gray/banner.html.tmpl
 lib/Babble/Theme/planet_gray/head.html.tmpl
@@ -44,10 +45,11 @@ lib/Babble/Theme/planet_gray/planet_gray.css
 lib/Babble/Theme/planet_gray/planet_gray.html.tmpl
 lib/Babble/Theme/planet_gray/sidebar.html.tmpl
 lib/Babble/Theme/sidebar.pm
-lib/Babble/Theme/sidebar/sidebar.tmpl
+lib/Babble/Theme/sidebar/sidebar.html.tmpl
 lib/Babble/Theme/XML.pm
 lib/Babble/Theme/XML/XML.foaf.tmpl
 lib/Babble/Theme/XML/XML.opml.tmpl
+lib/Babble/Theme/XML/XML.rss10.tmpl
 lib/Babble/Theme/XML/XML.rss20.tmpl
 lib/Babble/Transport.pm
 lib/Babble/Transport/LWP.pm
@@ -57,6 +59,8 @@ MANIFEST			This list of files
 MANIFEST.SKIP
 META.yml
 README
+SIGNATURE
+t/0-signature.t
 t/babble.t
 t/data/1.mbox
 t/data/1.opml
@@ -71,3 +75,5 @@ t/document.t
 t/dummy/Babble/Output/test.pm
 t/pod.t
 tools/install-theme.PL
+
+SIGNATURE    Added here by Module::Build

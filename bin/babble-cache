@@ -1,0 +1,167 @@
+#! /usr/bin/perl -w
+## babble-cache - Babble Cache manipulator
+## Copyright (C) 2004 Gergely Nagy <algernon@bonehunter.rulez.org>
+##
+## This file is part of Babble.
+##
+## Babble is free software; you can redistribute it and/or modify it
+## under the terms of the GNU General Public License as published by
+## the Free Software Foundation; version 2 dated June, 1991.
+##
+## Babble is distributed in the hope that it will be useful, but WITHOUT
+## ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+## FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+## for more details.
+##
+## You should have received a copy of the GNU General Public License
+## along with this program; if not, write to the Free Software
+## Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+
+use strict;
+use Getopt::Long qw(:config no_ignore_case no_auto_abbrev);
+use Pod::Usage;
+
+use Babble;
+use Babble::Cache;
+
+my $man = 0;
+my $help = 0;
+my $version = 0;
+my $cmds = {
+	help => \$help,
+	version => \$version,
+	man => \$man,
+};
+
+GetOptions ($cmds, 'help|?', 'version|V', 'man',
+	'prune|p=s@',
+	'show|s',
+	'convert|c=s',
+) or pod2usage (2);
+pod2usage (-exitstatus => 0, -verbose => 1) if $help;
+pod2usage (-exitstatus => 0, -verbose => 2) if $man;
+if ($version) {
+	print "babble-cache (Babble " . $Babble::VERSION . ")\n";
+	exit 0;
+}
+
+$| = 1;
+
+$cmds->{show} = 1
+	unless (exists ($cmds->{prune}) || exists ($cmds->{convert}));
+
+foreach my $db (@ARGV) {
+	my ($cfn, $format) = split (/:/, $db);
+	$Babble::Cache::cache_format = $format
+		if $format;
+	$format = $format || 'Dumper';
+	if ($cfn) {
+		die "Cache load failed!\n"
+			unless (Babble::Cache::cache_load ($cfn));
+	}
+
+	if (exists ($cmds->{show})) {
+		print 'Keys in the cache `' . $cfn . '\' (' . $format .
+		      ' format): ' .
+		      (keys %$Babble::Cache::cachedb) . "\n\n";
+		foreach my $cat (keys %$Babble::Cache::cachedb) {
+			print "\t" . 'Entries under `' . $cat . '\': ' .
+			      (keys %{$Babble::Cache::cachedb->{$cat}}) .
+			      "\n";
+		}
+		print "\n";
+	}
+
+	if (exists ($cmds->{prune})) {
+		print 'Pruning from the `' .
+		      $cfn . '\' (' . $format . ' format) cache: ' . "\n";
+		foreach my $key (@{$cmds->{prune}}) {
+			print "\t" . 'Pruning `' . $key . '\' ...' . "\n";
+			delete $Babble::Cache::cachedb->{$key};
+		}
+	}
+
+	if (exists ($cmds->{convert})) {
+		($format, $cfn) = split (/:/, $cmds->{convert});
+		$Babble::Cache::cache_format = $format if $format;
+	}
+	if (exists ($cmds->{prune}) ||
+	    exists ($cmds->{convert})) {
+		print 'Saving cache to `' . $cfn . '\' (' . $format .
+		       ' format) ...' . "\n";
+		Babble::Cache::cache_dump ($cfn);
+	}
+}
+
+=pod
+
+=head1 NAME
+
+babble-cache - Babble cache manipulator
+
+=head1 SYNOPSIS
+
+babble-cache [options] files...
+
+=head1 DESCRIPTION
+
+The babble-cache script is a little wrapper around Babble::Cache. The
+primary goal of the tool is to make one able to convert between
+different storage types and to allow deleting various keys from the
+database.
+
+=head1 OPTIONS
+
+=over 4
+
+=item --help
+
+Display a help message and exit.
+
+=item --version
+
+Print version information and exit.
+
+=item --show
+
+Show database information. Not really useful yet.
+
+=item --convert type[:filename]
+
+Convert the database from its native storage format to the specified
+one. If one also specifies a I<filename>, the result will be saved
+there instead of the input file.
+
+Not that when this key is used with a filename, only one database
+should be specified on the command-line, otherwise all of them will be
+saved to the output file.
+
+=item --prune key
+
+Delete the I<key> key of the cache. Most useful if one wants to prune
+the cached version of each items, so that babble will regenerate them
+with its next run.
+
+This is most useful after Babble::Document or
+Babble::Document::Collection changes.
+
+=back
+
+=head1 BUGS
+
+There is no way to inspect the items under the primary keys, nor to
+delete or alter them.
+
+=head1 AUTHOR
+
+Gergely Nagy, algernon@bonehunter.rulez.org
+
+Bugs should be reported at L<http://bugs.bonehunter.rulez.org/babble>.
+
+=head1 SEE ALSO
+
+Babble::Cache, babble
+
+=cut
+
+# arch-tag: a67106cd-3ff8-415f-8718-17029107cc4d

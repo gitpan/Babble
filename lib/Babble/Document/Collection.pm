@@ -73,6 +73,35 @@ templates. This does not come from the feed, as the others. It must be
 specified at object creation time. Defaults to I<author>'s value if
 undefined, or I<title>'s, if I<author> is undefined too.
 
+=item image
+
+The image associated with the collection. It is stored as a HASH
+reference, containing the following keys:
+
+=over 4
+
+=item url
+
+The URL to the image. (Mandatory)
+
+=item title
+
+Title of the image (to be used in ALT attributes or the like)
+
+=item link
+
+An image link - where the image points to. (Mandatory)
+
+=item width
+
+Width of the image.
+
+=item height
+
+Height of the image.
+
+=back
+
 =back
 
 =head1 METHODS
@@ -82,10 +111,7 @@ undefined, or I<title>'s, if I<author> is undefined too.
 =item new()
 
 Creates a new, empty Babble::Document::Collection object. All the
-properties mentioned above are recognised as paramaters. Aside from
-those, the I<-limit_max> parameter is recognised too. All the methods
-this class provides that give back an array of documents will use the
-value of this parameter to limit the size of the array.
+properties mentioned above are recognised as paramaters.
 
 To add documents to the collection, simply push them to
 C<@{$collection-E<gt>{documents}}>.
@@ -104,7 +130,7 @@ sub new {
 		date => $params{date},
 		content => $params{content},
 		name => $params{name} || $params{author} || $params{title},
-		-limit_max => $params{-limit_max},
+		image => $params{image} || {},
 
 		documents => []
 	}, $type;
@@ -121,21 +147,17 @@ specification of filters) in an arrayref, returns all the documents
 that match the specified criteria. If no matches are found, returns an
 empty array.
 
-The only recognised parameter is I<-limit_max>.
-
 =cut
 
 sub search ($;$) {
 	my ($self, $filters, $params) = @_;
 	my @results;
-	my $limit = $params->{-limit_max} || $self->{-limit_max};
 
 	foreach my $doc (@{$self->{documents}}) {
 		my @subres = $doc->search ($filters);
 		push (@results, @subres) if @subres;
 	}
 
-	delete @results[$limit..$#results] if $limit;
 	return @results;
 }
 
@@ -166,18 +188,14 @@ sub all () {
 Sort all the elements in an aggregation by date, and return the sorted
 array of items.
 
-The only recognised parameter is I<-limit_max>.
-
 =cut
 
 sub sort (;$) {
 	my ($self, $params) = @_;
-	my $limit = $params->{-limit_max} || $self->{-limit_max};
 
 	my @sorted = sort { $b->date_iso cmp $a->date_iso }
 		$self->all ();
 
-	delete @sorted[$limit..$#sorted] if $limit;
 	return @sorted;
 }
 

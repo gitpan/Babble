@@ -14,7 +14,7 @@ foreach (@ARGV) {
 		$theme . ".html.tmpl",
 
 		$theme . ".foaf.tmpl", $theme . ".opml.tmpl",
-		$theme . ".rss20.tmpl"
+		$theme . ".rss10.tmpl", $theme . ".rss20.tmpl"
 	);
 
 	mkpath ("blib/lib/Babble/Theme/" . $theme, 0, 0755);

@@ -20,9 +20,10 @@ package Babble::Theme::planet;
 
 use strict;
 use Babble::Theme;
-use Babble::Output::HTML;
+use Babble::Output::TTk;
 
-use Exporter ();
+use Date::Manip;
+
 use vars qw(@ISA);
 @ISA = qw(Babble::Theme);
 
@@ -133,6 +134,11 @@ Babble to generate an original blog, instead of an aggregation.
 By default, after each entry, this theme places its submission
 date. This can be turned off with this knob.
 
+=item template_knob_with_image
+
+If a feed comes with an associated image, the planet theme can display
+this image, provided this knob is enabled.
+
 =back
 
 =cut
@@ -140,16 +146,19 @@ date. This can be turned off with this knob.
 sub output {
 	my ($self, $babble, $params) = @_;
 
+	$params->{-format} = "html" unless $params->{-format};
+
 	$self->_merge_params
 		($babble, $params,
 		 {
-			 -template => $self->_find_template ('planet'),
-			 meta_css_link => "planet.css"
+			 -template => $self->_find_template ('planet',
+						     $params->{-format}),
+			 meta_css_link => "planet.css",
+			 UnixDate => \&UnixDate
 		 }
 	 );
 
-
-	return Babble::Output::HTML->output ($babble, $params);
+	return Babble::Output::TTk->output ($babble, $params);
 }
 
 =pod
@@ -162,7 +171,7 @@ Bugs should be reported at L<http://bugs.bonehunter.rulez.org/babble>.
 
 =head1 SEE ALSO
 
-Babble::Theme, Babble::Output::HTML
+Babble::Theme, Babble::Output::TTk
 
 =cut
 

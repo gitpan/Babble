@@ -23,6 +23,7 @@ use Carp;
 use Mail::Box::Manager;
 use Date::Manip;
 
+use Babble::Encode;
 use Babble::DataSource;
 use Babble::Document;
 use Babble::Document::Collection;
@@ -123,8 +124,8 @@ For the Babble::Document::Collection object to return, some
 information will be gathered from the Babble object which calls this
 method, or from the parameters passed to us. Namely, the
 I<meta_title>, I<meta_desc>, I<meta_link>, I<meta_owner>,
-I<meta_owner_email>, I<meta_subject> and I<meta_feed_link> keys will
-be used, if present.
+I<meta_owner_email>, I<meta_subject>, I<meta_image> and
+I<meta_feed_link> keys will be used, if present.
 
 =cut
 
@@ -135,11 +136,10 @@ sub collect () {
 	my $folder = $mgr->open (folder => $self->{-location});
 
 	foreach ("meta_title", "meta_desc", "meta_link", "meta_owner_email",
-		 "meta_subject", "meta_feed_link", "meta_owner") {
-		$args{$_} = $$babble->{Params}->{$_};
-
-		$args{$_} = $self->{$_} if (defined $self->{$_});
-		$args{$_} = "" if (!$args{$_});
+		 "meta_subject", "meta_feed_link", "meta_owner",
+		 "meta_image") {
+		$args{$_} = $self->{$_} || $$babble->{Params}->{$_} || "";
+		$args{$_} = to_utf8 ($args{$_});
 	}
 
 	$collection = Babble::Document::Collection->new (
@@ -150,8 +150,9 @@ sub collect () {
 		content => $args{meta_desc},
 		date => ParseDate ("today"),
 		subject => $args{meta_subject},
-		name => $self->{-id} || $args{meta_owner} ||
+		name => to_utf8 ($self->{-id}) || $args{meta_owner} ||
 			$args{meta_owner_email} || $args{meta_title},
+		image => $args{meta_image},
 	);
 
 	foreach my $msg (@$folder) {
@@ -161,12 +162,12 @@ sub collect () {
 		);
 
 		my $doc = Babble::Document->new (
-			title => $msg->subject || $msg->date,
+			title => to_utf8 ($msg->subject) || $msg->date,
 			id => $link,
-			content => $msg->decoded()->string,
-			author => ($msg->from())[0]->name,
+			content => to_utf8 ($msg->decoded()->string),
+			author => to_utf8 (($msg->from())[0]->name),
 			date => ParseDate ('epoch ' . $msg->timestamp),
-			subject => $msg->get ('X-Category'),
+			subject => to_utf8 ($msg->get ('X-Category')),
 		);
 
 		push (@{$collection->{documents}}, $doc);

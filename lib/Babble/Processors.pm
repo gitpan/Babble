@@ -58,6 +58,20 @@ sub master {
 
 =pod
 
+=item image()
+
+Adds an B<image> key to the I<item>: the feed image of the I<channel>.
+
+=cut
+
+sub image {
+	my ($item, $channel) = @_;
+
+	$$item->{image} = $$channel->{image};
+}
+
+=pod
+
 =item creator()
 
 Sets the author of the item to the I<source>'s B<-id> field, if the
@@ -73,20 +87,6 @@ sub creator {
 
 =pod
 
-=item date()
-
-Exports an ISO-style (I<date_iso>) and a textual (I<date_text>)
-representation of the items submission date for use by templates.
-
-=cut
-
-sub date {
-	my $item = shift;
-
-	$$item->{date_text} = $$item->date_text;
-	$$item->{date_iso} = $$item->date_iso;
-}
-
 =pod
 
 =item default()
@@ -99,7 +99,7 @@ each other.
 sub default {
 	master (@_);
 	creator (@_);
-	date (@_);
+	image (@_);
 }
 
 =pod

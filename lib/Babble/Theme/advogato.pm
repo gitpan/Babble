@@ -20,9 +20,8 @@ package Babble::Theme::advogato;
 
 use strict;
 use Babble::Theme;
-use Babble::Output::HTML;
+use Babble::Output::TTk;
 
-use Exporter ();
 use vars qw(@ISA);
 @ISA = qw(Babble::Theme);
 
@@ -126,16 +125,18 @@ date. This can be turned off with this knob.
 sub output {
 	my ($self, $babble, $params) = @_;
 
+	$params->{-format} = "html" unless $params->{-format};
+
 	$self->_merge_params
 		($babble, $params,
 		 {
-			 -template => $self->_find_template ('advogato'),
-			 meta_css_link => "advogato.css"
+			 -template => $self->_find_template ('advogato',
+						     $params->{-format}),
+			 meta_css_link => "advogato.css",
 		 }
 	 );
 
-
-	return Babble::Output::HTML->output ($babble, $params);
+	return Babble::Output::TTk->output ($babble, $params);
 }
 
 =pod
@@ -148,7 +149,7 @@ Bugs should be reported at L<http://bugs.bonehunter.rulez.org/babble>.
 
 =head1 SEE ALSO
 
-Babble::Theme, Babble::Output::HTML
+Babble::Theme, Babble::Output::TTk
 
 =cut
 

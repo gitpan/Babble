@@ -67,7 +67,7 @@ Bugs should be reported at L<http://bugs.bonehunter.rulez.org/babble>.
 
 =head1 SEE ALSO
 
-Babble::Output::HTML, Babble::Output::RSS, Babble::Output::TTk
+Babble::Output::RSS, Babble::Output::TTk
 
 =cut
 

@@ -59,6 +59,13 @@ body {
 	   text-decoration: underline;
 }
 
+#item-meta img {
+                 float: right;
+                 padding: 2px;
+                 margin: 1em;
+                 border: 1px dashed black;
+}
+
 #item-title {
 	    padding-top: 1em;
 	    font-size: 120%;
@@ -77,8 +84,9 @@ body {
 }
 
 #item-content {
-	      border-left: 1px dotted grey;
-	      padding: 0px 20px 0px 20px;
+                text-align: justify;
+                border-left: 1px dotted grey;
+                padding: 0px 20px 0px 20px;
 }
 
 .separator { color: #666666; }

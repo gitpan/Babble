@@ -41,8 +41,8 @@ Babble::Cache::Storable - Storable data storage for Babble::Cache
 
 =head1 DESCRIPTION
 
-This module implements a storage format for Babble::Cache that uses
-Storable to store and retrieve the cache.
+This module implements a storage format for B<Babble::Cache> that uses
+B<Storable> to store and retrieve the cache.
 
 The main advantage is speed, but the stored cache is not human
 readable.
@@ -55,7 +55,7 @@ Bugs should be reported at L<http://bugs.bonehunter.rulez.org/babble>.
 
 =head1 SEE ALSO
 
-Storable, Babble, Babble::Cache::Dumper
+Storable(3pm), Babble(3pm), Babble::Cache(3pm)
 
 =cut
 

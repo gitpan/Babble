@@ -25,7 +25,6 @@ use Date::Manip;
 use Babble::Theme;
 use Babble::Output::TTk;
 
-use Exporter ();
 use vars qw(@ISA);
 @ISA = qw(Babble::Theme);
 
@@ -69,18 +68,13 @@ Link to the FOAF feed the Babble provides.
 
 Link to the homepage of the Babble.
 
-=back
+=item meta_image
 
-=head1 TEMPLATE OPTIONS
+An image associated with the feed. This must be a HASH reference,
+containing at least the B<url> and B<link> keys. The B<title>,
+B<width> ad B<height> keys are also recognised.
 
-=over 4
-
-=item template_conf_max_days
-
-Controls the maximum age of items. Entries older than the value
-specified here will not be displayed.
-
-This only affects the I<rss20> output format.
+This is only supported by the I<rss10> and I<rss20> formats.
 
 =back
 
@@ -92,8 +86,8 @@ This only affects the I<rss20> output format.
 
 This method sets up parameters for the Babble::Output::TTK-E<gt>output
 method. It recognises only the I<-format> option, which determines
-which output format is used. Currently B<foaf>, B<opml> and B<rss20>
-are provided by the theme.
+which output format is used. Currently B<foaf>, B<opml>, B<rss10> and
+B<rss20> are provided by the theme.
 
 =cut
 
@@ -105,7 +99,8 @@ sub output {
 		 {
 			 -template => $self->_find_template ('XML',
 						     $params->{-format}),
-			 UnixDate => \&UnixDate
+			 UnixDate => \&UnixDate,
+			 ParseDate => \&ParseDate,
 		 }
 	 );
 

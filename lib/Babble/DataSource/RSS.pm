@@ -19,9 +19,10 @@
 package Babble::DataSource::RSS;
 
 use strict;
+use Encode;
 use Carp;
 
-use Babble;
+use Babble::Encode;
 use Babble::Cache;
 use Babble::DataSource;
 use Babble::Document;
@@ -78,7 +79,7 @@ considreably, yet it needs much more memory too.
 sub collect () {
 	my $self = shift;
 	my $rss = XML::RSS->new ();
-	my ($collection, $feed, $date, $subject, $creator);
+	my ($collection, $feed, $date, $subject, $creator, $image);
 
 	$feed = Babble::Transport->get ($self);
 	return undef unless $feed;
@@ -107,21 +108,33 @@ sub collect () {
 		$creator = $rss->channel ('dc')->{creator};
 	}
 	$date = "today" unless $date;
+	if ($date =~ /(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2}):(\d{2})Z/) {
+		$date = "$1 $2:00+$3:00";
+	}
 	$creator = $self->{-id} unless $creator;
 
+	$image = {
+		title => to_utf8 ($rss->image ('title')),
+		url => $rss->image ('url'),
+		link => $rss->image ('link'),
+		width => $rss->image ('width'),
+		height => $rss->image ('height'),
+	} if $rss->image ('url');
+
 	$collection = Babble::Document::Collection->new (
-		author => $creator,
-		title => $rss->channel ('title'),
-		content => $rss->channel ('description'),
-		subject => $subject,
+		author => to_utf8 ($creator),
+		title => to_utf8 ($rss->channel ('title')),
+		content => to_utf8 ($rss->channel ('description')),
+		subject => to_utf8 ($subject),
 		id => $rss->channel ('link'),
 		link => $self->{-location},
 		date => ParseDate ($date),
-		name => $self->{-id},
+		name => to_utf8 ($self->{-id}),
+		image => $image,
 	);
 
 	foreach (@{$rss->{items}}) {
-		my ($date, $author, $subject, $item);
+		my ($date, $author, $subject, $item, $content);
 
 		if ($_->{dc}) {
 			$date = $_->{dc}->{date};
@@ -131,16 +144,27 @@ sub collect () {
 
 		$date = $_->{pubDate} unless $date;
 		$date = $_->{date} unless $date;
+		if ($date &&
+		    $date =~ /(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2}):(\d{2})Z/) {
+			$date = "$1 $2:00+$3:00";
+		}
 		$date = $collection->{date} unless $date;
+		if ($date =~ /(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2}):(\d{2})Z/) {
+			$date = "$1 $2:00+$3:00";
+		}
+
 		$author = $self->{-id} unless $author;
 
+		$content = $_->{description} ||
+			$_->{'http://purl.org/rss/1.0/modules/content/'}->{encoded};
+
 		$item = Babble::Document->new (
-			author => $author,
+			author => to_utf8 ($author),
 			date => ParseDate ($date),
-			content => $_->{description},
-			title => $_->{title},
+			content => to_utf8 ($content),
+			title => to_utf8 ($_->{title}),
 			id => $_->{link},
-			subject => $subject
+			subject => to_utf8 ($subject),
 		);
 
 		push (@{$collection->{documents}}, $item);

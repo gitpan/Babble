@@ -1,5 +1,54 @@
 Changes -- list of user visible changes			-*- outline -*-
 
+* Babble 0.06 -- 2004-04-12
+
+** More forgiving parsing and data handling
+
+Babble::DataSource::RSS was made a bit more robust (handles different
+date formats, and <content:encoded>...</content:encoded> stuff), and
+bin/babble was teached to correct some more common problems in RSS
+feeds.
+
+** Feed image support
+
+Babble is now able to parse, generate and handle feed images, as seen
+in RSS feeds. Useful when one would like to see a picture of article
+authors near their article.
+
+The planet, planet_gray and XML themes have support for displaying
+these, as does the RSS output method.
+
+** Babble::Theme::XML has a new format
+
+Babble::Theme::XML has a new format: rss10, which outputs RSS 1.0
+feeds. Intended to be used instead of Babble::Output:RSS, when one
+wants more control over the content of the feed.
+
+** Demise of Babble::Output::HTML
+
+It was found that HTML::Template is not too useful with Babble, so
+all the themes that were using it, were converted to Template
+Toolkit, and Babble::Output::HTML was removed.
+
+** Various layout fixes and improvements
+
+A few glitches and bugs were fixed in the templates.
+
+** Limiting support reimplemented
+
+Moved most of the limiting support out from the templates. This means
+that applications using Babble must do the limiting themselves, and
+the templates will use the collection they pass back to them.
+
+See bin/babble for an example on how to implement this.
+
+** Fixed a bug which prevented Babble to be used when installed
+
+Due to me testing Babble from the source tree, and not when it was
+installed, Babble::Output::TTk did not pass the ABSOLUTE option to
+template toolkit, resulting in run-time errors when trying to run
+babble after a ./Build install. This is now fixed.
+
 * Babble 0.05 -- 2004-04-03
 
 ** Improved limiting support

@@ -46,41 +46,42 @@ Babble::Cache provides the following methods:
 
 =over 4
 
-=item cache_load($fn)
+=item cache_load ($fn)
 
-Loads the file specified, if exists. The format of the database can
-vary. By default, it is valid perl code, dumped out with Data::Dumper,
-but it can be anything that the Babble::Cache:: sub-modules support.
+Loads the file specified in B<$fn>, if exists. The format of the
+database can vary. By default, it is valid perl code, dumped out with
+B<Data::Dumper>, but it can be anything that the B<Babble::Cache::>q
+sub-modules support.
 
 =cut
 
 sub cache_load ($) {
 	my $fn = shift;
 
-	return unless ($fn && -e $fn);
+	return 1 unless ($fn && -e $fn);
 
 	eval "use Babble::Cache::$cache_format";
 	if ($@) {
 		carp $@;
-		return;
+		return undef;
 	}
-	"Babble::Cache::$cache_format"->cache_load ($fn, \$cachedb);
+	return "Babble::Cache::$cache_format"->cache_load ($fn, \$cachedb);
 }
 
 =pod
 
-=item cache_frob($category, $id, $data [, $keys])
+=item cache_frob ($category, $id, $data [, $keys])
 
 Frobnicate stuff in the cache. This is a quite complex method, which
 does a few interesting things. First, it looks up if an entry named
-I<$id> exists under the I<$category> in the cache. If it does, all the
-keys listed in the I<$keys> arrayref will be copied over from the
+B<$id> exists under the B<$category> in the cache. If it does, all the
+keys listed in the B<$keys> arrayref will be copied over from the
 cache. If the cache does not have the key yet, it will be updated.
 
-If the entry is not found in the cache, the keys listed in I<$keys>
+If the entry is not found in the cache, the keys listed in B<$keys>
 will be stored in it.
 
-If I<$keys> is not defined, all keys of I<$data> will be used.
+If B<$keys> is not defined, all keys of B<$data> will be used.
 
 =cut
 
@@ -107,9 +108,9 @@ sub cache_frob ($$$;$) {
 
 =pod
 
-=item cache_update($category, $id, $data, $key)
+=item cache_update ($category, $id, $data, $key)
 
-Update the cache with the values of I<$data> when its I<$key> key is
+Update the cache with the values of B<$data> when its B<$key> key is
 defined. Otherwise, return the contents of the appropriate entry of
 the cache.
 
@@ -128,10 +129,10 @@ sub cache_update ($$$$) {
 
 =pod
 
-=item cache_get($category, $id, $key)
+=item cache_get ($category, $id, $key)
 
-Retrieve the value of the I<$key> element in the I<$id> key in the
-I<$category> category of the cache.
+Retrieve the value of the B<$key> element in the B<$id> key in the
+B<$category> category of the cache.
 
 =cut
 
@@ -142,9 +143,9 @@ sub cache_get ($$$) {
 
 =pod
 
-=item cache_dump($fn)
+=item cache_dump ($fn)
 
-Save the cache to the specified file.
+Save the cache to the file specified in B<$fn>.
 
 =cut
 
@@ -156,9 +157,9 @@ sub cache_dump ($) {
 	eval "use Babble::Cache::$cache_format";
 	if ($@) {
 		carp $@;
-		return;
+		return undef;
 	}
-	"Babble::Cache::$cache_format"->cache_dump ($fn, \$cachedb);
+	return "Babble::Cache::$cache_format"->cache_dump ($fn, \$cachedb);
 }
 
 =pod
@@ -172,8 +173,8 @@ sub cache_dump ($) {
 =item $Babble::Cache::cache_format
 
 Determines the format of the cache. Values can be I<Dumper>
-(Data::Dumper will be used to dump the database, and require to
-restore it), or I<Storable> (Storable will be used to dump and
+(B<Data::Dumper> will be used to dump the database, and require to
+restore it), or I<Storable> (B<Storable> will be used to dump and
 retrieve the data).
 
 Defaults to I<Dumper>, because that is easier to edit by hand, if
@@ -183,7 +184,7 @@ needed.
 
 =head1 STORAGE FORMATS
 
-Storage formats are implemented by Babble::Cache sub-modules. A
+Storage formats are implemented by B<Babble::Cache> sub-modules. A
 storage module needs to have two methods (both must be callble in an
 OO fashion):
 
@@ -210,7 +211,7 @@ Bugs should be reported at L<http://bugs.bonehunter.rulez.org/babble>.
 
 =head1 SEE ALSO
 
-Babble, Babble::Cache::Dumper, Babble::Cache::Storable
+Babble(3pm), Babble::Cache::Dumper(3pm), Babble::Cache::Storable(3pm)
 
 =cut
 

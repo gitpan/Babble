@@ -1,4 +1,4 @@
-## Babble/Cache/Dumper.pm
+## Babble/Encode.pm
 ## Copyright (C) 2004 Gergely Nagy <algernon@bonehunter.rulez.org>
 ##
 ## This file is part of Babble.
@@ -16,50 +16,59 @@
 ## along with this program; if not, write to the Free Software
 ## Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 
-package Babble::Cache::Dumper;
+package Babble::Encode;
 
 use strict;
-use Carp;
-use Data::Dumper;
-
-sub cache_load ($$) {
-	my ($self, $fn, $cdb) = @_;
-
-	$$cdb = do $fn;
-	if ($@) {
-		carp $@;
-		return;
-	}
-	return 1;
-}
-
-sub cache_dump ($$) {
-	my ($self, $fn, $cachedb) = @_;
-
-	$Data::Dumper::Terse = 1;
-
-	unless (open (OUTF, '>' . $fn)) {
-		carp 'Error dumping cache to `' . $fn . '\': ' . $1;
-		return;
-	}
-	print OUTF "# Automatically generated file. Edit carefully!\n";
-	print OUTF Dumper ($$cachedb) . ";\n";
-	close OUTF;
-}
+require Exporter;
+use base qw/Exporter/;
+our @EXPORT = qw(to_utf8);
 
 =pod
 
 =head1 NAME
 
-Babble::Cache::Dumper - Data::Dumper data storage for Babble::Cache
+Babble::Encode - Encoding wrapper for Babble
+
+=head1 SYNOPSIS
+
+ use Babble::Encode;
+ ...
+ $encoded = to_utf8 ($string);
+ ...
 
 =head1 DESCRIPTION
 
-This module implements a storage format for B<Babble::Cache> that uses
-B<Data::Dumper> to store and retrieve the cache.
+This module provides a wrapper around either Encode or Text::Iconv,
+whichever is installed on ones computer, to convert an arbitrary
+string to UTF-8.
 
-The main advantage is human readability, but the stored cache is slow
-to load and save.
+=head1 METHODS
+
+=over 4
+
+=item to_utf8
+
+Converts its only argument to UTF-8.
+
+=cut
+
+sub to_utf8 ($) {
+	my ($text) = @_;
+	eval q{
+		use Encode;
+	};
+	if ($@) {
+		use Text::Iconv;
+		my $c = Text::Iconv ('iso-8859-2', 'utf-8');
+		return $c->convert ($text) || $text;
+	} else {
+		return Encode::encode ('utf-8', $text);
+	}
+}
+
+=pod
+
+=back
 
 =head1 AUTHOR
 
@@ -69,10 +78,10 @@ Bugs should be reported at L<http://bugs.bonehunter.rulez.org/babble>.
 
 =head1 SEE ALSO
 
-Data::Dumper(3pm), Babble(3pm), Babble::Cache(3pm)
+Encode, Text::Iconv
 
 =cut
 
 1;
 
-# arch-tag: b974429f-b379-4277-9126-2c29cc3dde22
+# arch-tag: 6393c26f-c780-4533-900b-6133ed0dec1f

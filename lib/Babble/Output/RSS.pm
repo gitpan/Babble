@@ -83,6 +83,12 @@ The e-mail of the Babble owner, used as the RSS channel creator.
 
 This too, is an optional argument.
 
+=item meta_image
+
+An image associated with the feed. This must be a HASH reference,
+containing at least the B<url> and B<link> keys. The B<title>,
+B<width> ad B<height> keys are also recognised.
+
 =back
 
 =cut
@@ -91,12 +97,9 @@ sub output {
 	my ($self, $babble, $params) = @_;
 	my %args;
 
-	foreach ("meta_title", "meta_desc", "meta_link",
-		 "meta_owner_email") {
-		$args{$_} = $$babble->{Params}->{$_};
-
-		$args{$_} = $params->{$_} if (defined $params->{$_});
-		$args{$_} = "" if (!$args{$_});
+	foreach ("meta_title", "meta_desc", "meta_link", "meta_owner_email",
+		 "meta_subject", "meta_image") {
+		$args{$_} = $params->{$_} || $$babble->{Params}->{$_} || "";
 	}
 
 	my $rss = new XML::RSS (version => '1.0', encode_output => 0);
@@ -111,6 +114,7 @@ sub output {
 			       $args{meta_owner_email}
 			     }
 		      );
+	$rss->image (%{$args{meta_image}}) if $args{meta_image};
 
 	foreach my $item ($$babble->sort ()) {
 		$rss->add_item (

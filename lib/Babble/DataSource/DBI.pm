@@ -23,6 +23,7 @@ use Carp;
 use DBI;
 use Date::Manip;
 
+use Babble::Encode;
 use Babble::DataSource;
 use Babble::Document;
 use Babble::Document::Collection;
@@ -59,11 +60,11 @@ fetches documents directly from whatever database DBI can fetch from.
 
 =over 4
 
-=item I<new>(B<%params>)
+=item new (%params)
 
 This method creates a new object. The recognised parameters are:
 
-=over 8
+=over 4
 
 =item -location
 
@@ -88,8 +89,8 @@ defaults to B<posts>.
 =item collect
 
 Collect data from our database. The table where we fetch fields from
-must contain the following columns: I<title>, I<author>, I<subject>,
-I<date>, I<id>, I<content>.
+must contain the following columns: B<title>, B<author>, B<subject>,
+B<date>, B<id> and B<content>.
 
 =cut
 
@@ -117,11 +118,10 @@ sub collect () {
 	$dbh->disconnect;
 
 	foreach ("meta_title", "meta_desc", "meta_link", "meta_owner_email",
-		 "meta_subject", "meta_feed_link", "meta_owner") {
-		$args{$_} = $$babble->{Params}->{$_};
-
-		$args{$_} = $self->{$_} if (defined $self->{$_});
-		$args{$_} = "" if (!$args{$_});
+		 "meta_subject", "meta_feed_link", "meta_owner",
+		 "meta_image") {
+		$args{$_} = $self->{$_} || $$babble->{Params}->{$_} || "";
+		$args{$_} = to_utf8 ($args{$_});
 	}
 
 	$collection = Babble::Document::Collection->new (
@@ -132,18 +132,19 @@ sub collect () {
 		content => $args{meta_desc},
 		date => ParseDate ("today"),
 		subject => $args{meta_subject},
-		name => $self->{-id} || $args{meta_owner} ||
+		name => to_utf8 ($self->{-id}) || $args{meta_owner} ||
 			$args{meta_owner_email} || $args{meta_title},
+		image => $args{meta_image},
 	);
 
 	foreach my $row (keys %{$docs}) {
 		my $doc = Babble::Document->new (
-			title => $docs->{$row}->{title},
+			title => to_utf8 ($docs->{$row}->{title}),
 			id => $docs->{$row}->{id},
-			content => $docs->{$row}->{content},
-			subject => $docs->{$row}->{subject},
+			content => to_utf8 ($docs->{$row}->{content}),
+			subject => to_utf8 ($docs->{$row}->{subject}),
 			date => ParseDate ($docs->{$row}->{date}),
-			author => $docs->{$row}->{author},
+			author => to_utf8 ($docs->{$row}->{author}),
 		);
 
 		push (@{$collection->{documents}}, $doc);
@@ -164,8 +165,8 @@ Bugs should be reported at L<http://bugs.bonehunter.rulez.org/babble>.
 
 =head1 SEE ALSO
 
-Babble::Document, Babble::Document::Collection,
-Babble::DataSource, DBI
+Babble::Document(3pm), Babble::Document::Collection(3pm),
+Babble::DataSource(3pm), DBI(3pm)
 
 =cut
 

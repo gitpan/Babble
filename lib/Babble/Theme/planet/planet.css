@@ -76,9 +76,12 @@
              color: rgb(215, 71, 8);
 }
 
-body {
+#body {
        margin-right: 200px;
        margin-top: 125px;
+}
+
+body {
        color: black;
        background-color: white;
        font-family: "trebuchet ms", "verdana", sans-serif;
@@ -99,7 +102,7 @@ body {
          margin-top: 5px;
          margin-bottom: 25px;
          padding-left: 25px;
-
+         text-align: justify;
          
          clear: both;
 }
@@ -126,4 +129,11 @@ body {
 .entry-title a:hover, .entry-date a:hover {
           text-decoration: underline;
           color: blue;
+}
+
+.entry-pic {
+             float: right;
+             border: 1px dotted black;
+             padding: 2px;
+             margin: 1em;
 }

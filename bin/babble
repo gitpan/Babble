@@ -21,12 +21,14 @@ use strict;
 use Config::IniFiles;
 use Getopt::Long qw(:config no_ignore_case no_auto_abbrev);
 use Pod::Usage;
+use Date::Manip;
 use Text::Iconv;
 
 use Babble;
 use Babble::Cache;
 use Babble::Utils;
 use Babble::Processors::Extra;
+use Babble::Encode;
 
 my $cfgfile = "-";
 my $verbose = 0;
@@ -46,6 +48,11 @@ if ($version) {
 	print "babble (Babble " . $Babble::VERSION . ")\n";
 	exit 0;
 }
+if ($verbose >= 3) {
+	use Carp;
+	$SIG{__WARN__} = \&carp;
+	$SIG{__DIE__} = \&confess;
+}
 
 $| = 1;
 
@@ -63,6 +70,7 @@ my @feeds = ();
 my @themes = ();
 my @cbs = ();
 my %babble_config = ();
+my $cache_ok = 0;
 
 foreach my $param ($cfg->Parameters ('Babble')) {
 	my $key = $param;
@@ -76,10 +84,14 @@ foreach my $param ($cfg->Parameters ('Babble')) {
 
 push (@cbs, \&cb_collect_start) if ($verbose >= 2);
 
-print "Loading cache ...\n" if ($verbose >= 2);
+print "Loading cache " . $babble_config{cache_db} . "...\n" if ($verbose >= 2);
 $Babble::Cache::cache_format = $babble_config{cache_format}
 	if $babble_config{cache_format};
-Babble::Cache::cache_load ($babble_config{cache_db});
+if ($babble_config{cache_db}) {
+	die "Cache load failed!\n"
+		unless (Babble::Cache::cache_load ($babble_config{cache_db}));
+	$cache_ok = 1;
+}
 
 print "Recording sources ...\n" if ($verbose >= 2);
 
@@ -87,6 +99,7 @@ foreach my $feed (grep (!/^(theme:|babble$)/i, $cfg->Sections)) {
 	my %feed_params = (
 		-location => $feed,
 		-cache_parsed => $babble_config{cache_parsed},
+		-cache_only => $babble_config{cache_only},
 		-preprocessors => [ \&utficate, \&htmlfix ],
 		-id => $cfg->val ($feed, 'name') || $feed,
 	);
@@ -118,7 +131,6 @@ foreach my $feed (grep (!/^(theme:|babble$)/i, $cfg->Sections)) {
 
 my $babble = Babble->new (
 	-cache_db => $babble_config{cache_db},
-	-limit_max => $babble_config{limit},
 	-callbacks_collect_start => \@cbs,
 	-processors => [ \&Babble::Processors::Extra::creator_map ],
 );
@@ -135,6 +147,29 @@ print "Caching ...\n" if ($verbose >= 2);
 $babble->cache (
 	-cache_fields => [ 'id', 'date' ]
 );
+
+print "Limiting ...\n" if ($verbose >= 2);
+my (@collection, $limit);
+
+$limit = $babble_config{days_per_page};
+if ($limit) {
+	@collection = sort { $b->date_iso cmp $a->date_iso }
+		$babble->search ([{
+			field => 'date',
+			pattern => ParseDate (
+				DateCalc ('today', '-' . $limit .
+						  'days')),
+			cmp => sub {
+				my ($a, $b) = @_;
+				return (Date_Cmp ($a, $b) > 0);
+			},
+		}]);
+}
+@collection = $babble->sort () unless @collection;
+$limit = $babble_config{items_per_page} || $babble_config{limit};
+delete @collection[$limit..$#collection] if $limit;
+
+$babble->add_params (babble_collection => \@collection);
 
 foreach my $theme (split (/ /, $babble_config{themes})) {
 	my %theme_config = ();
@@ -169,6 +204,7 @@ foreach my $theme (split (/ /, $babble_config{themes})) {
 		$theme_config{-format} = $format;
 		open (OUTF, ">" . $babble_config{output_dir} .
 			      "/" . $file);
+		binmode OUTF, ":raw";
 		print OUTF $babble->output (%theme_config);
 		close (OUTF);
 	}
@@ -176,7 +212,34 @@ foreach my $theme (split (/ /, $babble_config{themes})) {
 
 sub utficate {
 	my $text = shift;
-	my $c = Text::Iconv->new ('iso-8859-2', 'utf-8');
+	my $source_encoding = 'utf-8';
+	my ($c, $tmp);
+
+	if ($$text =~ /<\?.*encoding=[\'"](.*?)[\'"].*\?>/) {
+		# The above regexp comes from Mark Pilgrim's
+		# UltraLiberalFeedParser.
+		$source_encoding = $1;
+		$$text =~ s/(<\?.*encoding=[\'"])
+			    (.*?)
+			    ([\'"].*\?>)/${1}utf-8${3}/x;
+	}
+	$c = Text::Iconv->new ($source_encoding, 'utf-8');
+	$tmp = $c->convert ($$text);
+
+	return ($$text = $tmp) if $tmp;
+
+	# Right, so the conversion did not go well. Let's go hardcore.
+	foreach my $encoding ('iso-8859-2', 'iso-8859-1', 'windows-1250') {
+		$c = Text::Iconv->new ($encoding, 'utf-8');
+		$tmp = $c->convert ($$text);
+		return ($$text = $tmp) if $tmp;
+	}
+
+	# We are still here? OH GOD! This must be some broken feed, so
+	# lets carp a little.
+	carp "Feed with broken encoding encountered.";
+	# Then strip all the unsafe chars
+	$$text =~ s/[^[:ascii:]]/./;
 	$$text = $c->convert ($$text);
 }
 
@@ -185,8 +248,9 @@ sub htmlfix {
 
 	return unless $$text;
 
-	$$text =~ s/&nbsp;/ /;
-	$$text =~ s/\&((?!\w+;))/\&amp;$1/g;
+	$$text =~ s/&nbsp;/\&#160;/;
+	$$text =~ s/\&((?!(\w+|#\d+);))/\&amp;$1/g;
+	$$text =~ s/\<([^\s\>\@]*\@[^\>\s]*)\>/\&lt;$1\&gt;/g;
 }
 
 sub cb_collect_start {
@@ -197,8 +261,13 @@ sub cb_collect_start {
 }
 
 END {
-	print "Saving cache ...\n" if ($verbose >= 2);
-	Babble::Cache::cache_dump ($babble_config{cache_db});
+	if ($cache_ok) {
+		print "Saving cache " . $babble_config{cache_db} . "...\n"
+			if ($verbose >= 2);
+		die "Cache save failed!\n"
+			unless (Babble::Cache::cache_dump
+				  ($babble_config{cache_db}));
+	}
 }
 
 =pod
@@ -222,19 +291,19 @@ generate static output.
 
 =over 4
 
-=item B<--debug>
+=item --debug
 
 Enable debugging output, slightly more verbose than B<--verbose>.
 
-=item B<--help>
+=item --help
 
 Display a help message and exit.
 
-=item B<--verbose>
+=item --verbose
 
 Enable verbose mode, printing the current state of processing.
 
-=item B<--version>
+=item --version
 
 Print version information and exit.
 
@@ -288,7 +357,7 @@ Bugs should be reported at L<http://bugs.bonehunter.rulez.org/babble>.
 
 =head1 SEE ALSO
 
-Babble
+Babble, babble-cache
 
 =cut
 

@@ -133,16 +133,10 @@ Babble to generate an original blog, instead of an aggregation.
 By default, after each entry, this theme places its submission
 date. This can be turned off with this knob.
 
-=back
+=item template_knob_with_image
 
-=head1 TEMPLATE OPTIONS
-
-=over 4
-
-=item template_conf_max_days
-
-Controls the maximum age of items. Entries older than the value
-specified here will not be displayed.
+If a feed comes with an associated image, the planet theme can display
+this image, provided this knob is enabled.
 
 =back
 

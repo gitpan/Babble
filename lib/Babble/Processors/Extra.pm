@@ -19,6 +19,7 @@
 package Babble::Processors::Extra;
 
 use strict;
+use Babble::Encode;
 use Date::Manip;
 use Data::Dumper;
 
@@ -64,8 +65,8 @@ sub creator_map {
 	return unless defined $$source->{-creator_map}->{$$item->{author}};
 
 	map {
-		$$item->{$_} =
-			$$source->{-creator_map}->{$$item->{author}}->{$_}
+		$$item->{$_} = to_utf8
+			($$source->{-creator_map}->{$$item->{author}}->{$_});
 	} keys (%{$$source->{-creator_map}->{$$item->{author}}});
 }
 

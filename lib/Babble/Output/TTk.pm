@@ -82,27 +82,16 @@ sub output {
 	my ($self, $babble, $params) = @_;
 	my $template = Template->new ({
 		INCLUDE_PATH => [ ".", dirname ($params->{-template}) ],
-		EVAL_PERL => 1
+		EVAL_PERL => 1,
+		ABSOLUTE => 1,
 	});
 	my $vars = {
 		collection => $$babble->{Collection},
 		babble => {
 			sort => sub {
-				return sort { $b->date_iso cmp $a->date_iso }
-					@_;
-			},
-			newer_than => sub {
-				my ($age) = @_;
-				return $$babble->search ([{
-					field => 'date',
-					pattern => ParseDate (
-						DateCalc ('today', '-' . $age .
-								  'days')),
-					cmp => sub {
-						my ($a, $b) = @_;
-						return (Date_Cmp ($a, $b) > 0);
-					},
-				}]);
+				my ($arr) = @_;
+				return sort { $b->{date} cmp $a->{date} }
+					@$arr;
 			},
 		},
 		last_update => UnixDate ("today", "%Y-%m-%d %H:%M:%S"),

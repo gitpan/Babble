@@ -27,7 +27,7 @@ use Babble::Processors;
 use Exporter ();
 use vars qw($VERSION @ISA);
 
-$VERSION = '0.05';
+$VERSION = '0.06';
 @ISA = qw(Exporter);
 
 =pod
@@ -73,7 +73,7 @@ C<Babble> has a handful of methods, all of them will be enumerated here.
 
 =over 4
 
-=item I<new>()
+=item new (%params)
 
 Creates a new Babble object. Arguments to the I<new> method are listed
 below, all of them are optional. All arguments passed to I<new> will
@@ -87,12 +87,6 @@ extensions.
 An array of subroutines that Babble will run for each and every item it
 processes. See the PROCESSORS section for more information about these
 matters.
-
-=item -limit_max
-
-The maximum number of items in the collection. This will be used by
-the top-level Babble::Document::Collection object, see the
-documentation of that class for further details.
 
 =item -callbacks_collect_start
 
@@ -119,8 +113,7 @@ sub new {
 	my %params = @_;
 	my $self = {
 		Sources => [],
-		Collection => Babble::Document::Collection->new
-			(-limit_max => $params{-limit_max}),
+		Collection => Babble::Document::Collection->new (),
 		Param => {},
 		Config => {
 			-processors => [ \&Babble::Processors::default ],
@@ -135,7 +128,6 @@ sub new {
 			      if (defined $params{$_});
 		delete $params{$_};
 	}
-	delete $params{-limit_max};
 
 	map { $self->{Config}->{$_} = $params{$_} } keys %params;
 
@@ -144,7 +136,7 @@ sub new {
 
 =pod
 
-=item I<add_params>(B<%params>)
+=item add_params (%params)
 
 Add custom paramaters to the Babble object, which might be usable for the
 output generation routines.
@@ -162,9 +154,10 @@ sub add_params (%) {
 
 =pod
 
-=item I<add_sources>(B<@sources>)
+=item add_sources (@sources)
 
-Adds multiple sources in one go.
+Adds multiple sources in one go. All elements of I<@sources> must be
+Babble::DataSource objects, or descendants.
 
 =cut
 
@@ -176,7 +169,7 @@ sub add_sources (@) {
 
 =pod
 
-=item I<collect_feeds>()
+=item collect_feeds ()
 
 Retrieve and process the feeds that were added to the Babble. All
 processor routines will be run by this very method. Also, if there
@@ -215,11 +208,13 @@ sub collect_feeds () {
 
 =pod
 
-=item sort([$params])
+=item sort ([$params])
 
 Sort all the elements in an aggregation by date, and return the sorted
 array of items. Leaves the work to
-Babble::Document::Collection->sort().
+B<Babble::Document::Collection>->sort().
+
+Parameters - if any - must be passed as HASH reference!
 
 =cut
 
@@ -231,9 +226,11 @@ sub sort (;$) {
 
 =pod
 
-=item all([$params])
+=item all ([$params])
 
 Return all items in an aggregation as an array.
+
+Parameters - if any - must be passed as HASH reference!
 
 =cut
 
@@ -245,16 +242,16 @@ sub all (;$) {
 
 =pod
 
-=item output(%params)
+=item output (%params)
 
-Generate the output. This methods recognises two arguments: C<type>,
+Generate the output. This methods recognises two arguments: I<-type>,
 which determines what output method will be used for the actual output
-itself, and C<theme>, which overrides this, and uses a theme engine
+itself, and I<-theme>, which overrides this, and uses a theme engine
 instead. (A theme engine is simply a wrapper around a specific output
 method, with some paramaters pre-filled.)
 
-The called module needs to be named C<Babble::Output::$type> or
-C<Babble::Theme::$theme>, and must be a Babble::Output descendant.
+The called module needs to be named B<Babble::Output::$type> or
+B<Babble::Theme::$theme>, and must be a B<Babble::Output> descendant.
 
 =cut
 
@@ -283,9 +280,11 @@ sub output ($;) {
 
 =pod
 
-=item search()
+=item search ($filters)
 
-Dispatch everything to Babble::Document::Collection->search().
+Dispatch everything to B<Babble::Document::Collection>->search().
+
+See L<Babble::Document> for more information about filters.
 
 =cut
 
@@ -304,16 +303,16 @@ Processors are subroutines that take four arguments: An I<item>, a
 I<channel>, a I<source>, and a C<Babble> object (the caller). All of
 them are references.
 
-An I<item> is a Babble::Document object, I<channel> is a
-Babble::Document::Collection object, and I<source> is a
-Babble::DataSource object.
+An I<item> is a B<Babble::Document> object, I<channel> is a
+B<Babble::Document::Collection> object, and I<source> is a
+B<Babble::DataSource> object.
 
 Preprocessors operate on I<item> in-place, doing whatever they want with
 it, being it adding new fields, modifying others or anything one might
 come up with.
 
 A default set of preprocessors, which are always run first (unless
-special hackery is in the works), are provided in the C<Babble::Processors>
+special hackery is in the works), are provided in the B<Babble::Processors>
 module. Since they are automatically used, one does not need to
 add them explicitly.
 
@@ -325,8 +324,9 @@ Bugs should be reported at L<http://bugs.bonehunter.rulez.org/babble>.
 
 =head1 SEE ALSO
 
-Babble::DataSource, Babble::Document, Babble::Document::Collection,
-Babble::Output, Babble::Theme, Babble::Processors
+Babble::DataSource(3pm), Babble::Document(3pm),
+Babble::Document::Collection(3pm), Babble::Output(3pm),
+Babble::Theme(3pm), Babble::Processors(3pm)
 
 =cut
 

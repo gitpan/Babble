@@ -1,5 +1,11 @@
 use Module::Build;
 
+eval q{
+	use Module::Signature;
+};
+my $sign = !$@;
+
+
 Module::Build->new (
 	module_name => "Babble",
 	license => "gpl",
@@ -8,7 +14,6 @@ Module::Build->new (
 		Date::Manip => 0
 	  },
 	recommends => {
-		HTML::Template => 0,
 		LWP::UserAgent => 0,
 		XML::RSS => 0,
 		Data::Dumper => 0,
@@ -26,12 +31,13 @@ Module::Build->new (
 			'XML'
 		]
 	},
-	scripts => [ 'bin/babble' ],
+	scripts => [ 'bin/babble', 'bin/babble-cache' ],
 	dist_author => 'Gergely Nagy <algernon@bonehunter.rulez.org>',
 	create_readme => 1,
 	dist_version_from => "lib/Babble.pm",
 	create_makefile_pl => 'passthrough',
 	recursive_test_files => 1,
+	sign => $sign,
 )->create_build_script;
 
 # arch-tag: 981be612-3aa1-4bc5-b398-fcca400a7fcd

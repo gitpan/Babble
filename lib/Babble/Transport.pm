@@ -65,11 +65,13 @@ sub get {
 	my ($self, $params) = @_;
 	our $cache = {};
 	my $loc = \$params->{-location};
+	my $result;
 
 	$params->{-headers}->{'If-Modified-Since'} =
 		Babble::Cache::cache_get ('Feeds', $$loc, 'time');
 
-	my $result = Babble::Transport::LWP->get ($params);
+	$result = Babble::Transport::LWP->get ($params) unless
+		$params->{-cache_only};
 
 	$result = Babble::Cache::cache_update (
 		'Feeds', $$loc,
