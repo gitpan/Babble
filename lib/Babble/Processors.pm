@@ -115,7 +115,7 @@ sub default {
 
 Gergely Nagy, algernon@bonehunter.rulez.org
 
-Bugs should be reported at L<http://mantis.bonehunter.rulez.org/>.
+Bugs should be reported at L<http://bugs.bonehunter.rulez.org/babble>.
 
 =head1 SEE ALSO
 

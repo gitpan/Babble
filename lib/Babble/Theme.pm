@@ -54,12 +54,17 @@ undef otherwise.
 
 =cut
 
-sub _find_template ($) {
-	my ($self, $theme) = @_;
+sub _find_template ($;$) {
+	my ($self, $theme, $ext) = @_;
+	if ($ext) {
+		$ext = "." . $ext;
+	} else {
+		$ext = "";
+	}
 
 	foreach (@INC) {
 		my $loc = $_ . "/Babble/Theme/" . $theme .
-			"/" . $theme . ".tmpl";
+			"/" . $theme . $ext. ".tmpl";
 		return $loc if -e $loc;
 	}
 	return undef;
@@ -95,7 +100,7 @@ sub _merge_params ($$$) {
 
 Gergely Nagy, algernon@bonehunter.rulez.org
 
-Bugs should be reported at L<http://mantis.bonehunter.rulez.org/>.
+Bugs should be reported at L<http://bugs.bonehunter.rulez.org/babble>.
 
 =head1 SEE ALSO
 

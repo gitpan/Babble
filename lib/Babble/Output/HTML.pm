@@ -61,15 +61,55 @@ available items, using C<HTML::Template>.
 
 =pod
 
+=item _split_items()
+
+Split the retrieved feed items into an array of dates. So items
+submitted on the same date will be kept near each other. The structure
+of the resulting hash is something like this:
+
+  @dates = {
+	"2004-02-01" => {
+		date => "2004-02-01",
+		items => @list_of_items
+	}
+  };
+
+This should not be called directly.
+
+=cut
+
+sub _split_items {
+	my ($self, $babble) = @_;
+	my $titem = {};
+	my $dates = [];
+
+	foreach ($babble->sort ()) {
+		if (defined ($titem->{date})) {
+			if ($titem->{date} ne $_->date_date) {
+				push (@{$dates}, $titem);
+				$titem = ();
+			}
+		}
+		$titem->{date} = $_->date_date;
+		push (@{$titem->{items}}, $_);
+	}
+	push (@{$dates}, $titem);
+
+	return $dates;
+}
+
+
+=pod
+
 =item I<output>(B<$babble>, B<%params>)
 
 This output method recognises only the I<template> argument, which
-will be passed to C<HTML::Template->new()>. All other arguments will
+will be passed to C<HTML::Template-E<gt>new()>. All other arguments will
 be made available for use in the template.
 
 Along with the arguments passed to this method, the paramaters set up
-with C<$babble->add_params()>, an array of channels, and an array of
-dates will be made available for the template.
+with C<$babble-E<gt>add_params()>, an array of channels, and an array
+of dates will be made available for the template.
 
 See the source of this module, C<HTML::Template> and any of the
 example templates for details.
@@ -85,8 +125,8 @@ sub output {
 		(filename => $params{-template},
 		 die_on_bad_params => 0, global_vars => 1,
 		 path => dirname ($params{-template}));
-	$tmpl->param (documents => $babble->{Documents});
-	$tmpl->param (items => $babble->{Dates});
+	$tmpl->param (documents => $babble->{Collection}->{documents});
+	$tmpl->param (items => $self->_split_items ($babble));
 	$tmpl->param ($babble->{Params});
 	$tmpl->param (\%params);
 	$tmpl->param (last_update => UnixDate ("today", "%Y-%m-%d %H:%M:%S"));
@@ -102,11 +142,11 @@ sub output {
 
 Gergely Nagy, algernon@bonehunter.rulez.org
 
-Bugs should be reported at L<http://mantis.bonehunter.rulez.org/>.
+Bugs should be reported at L<http://bugs.bonehunter.rulez.org/babble>.
 
 =head1 SEE ALSO
 
-Babble, HTML::Template, Babble::Output::RSS
+Babble, HTML::Template, Babble::Output
 
 =cut
 

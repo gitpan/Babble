@@ -117,7 +117,7 @@ sites (Babbles, planets and the like). When enabled, a I<planetarium>
 paramater must be made available to the template. This should contain
 an array of hashes. The layout should be as follows:
 
-  planetarium => [ { name => "Example", url => "http://example.org/" } ]
+  planetarium => [ { name => 'Example', url => 'http://example.org/' } ]
 
 =item template_knob_no_date_head
 
@@ -159,11 +159,11 @@ sub output {
 
 Gergely Nagy, algernon@bonehunter.rulez.org
 
-Bugs should be reported at L<http://mantis.bonehunter.rulez.org/>.
+Bugs should be reported at L<http://bugs.bonehunter.rulez.org/babble>.
 
 =head1 SEE ALSO
 
-Babble::Theme
+Babble::Theme, Babble::Output::HTML
 
 =cut
 

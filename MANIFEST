@@ -1,6 +1,6 @@
 babble.pl
 Build.PL
-ChangeLog
+Changes
 COPYING
 lib/Babble.pm
 lib/Babble/DataSource.pm
@@ -11,6 +11,7 @@ lib/Babble/Document/Collection.pm
 lib/Babble/Output.pm
 lib/Babble/Output/HTML.pm
 lib/Babble/Output/RSS.pm
+lib/Babble/Output/TTk.pm
 lib/Babble/Processors.pm
 lib/Babble/Processors/Extra.pm
 lib/Babble/Theme.pm
@@ -28,12 +29,23 @@ lib/Babble/Theme/planet/main_content.tmpl
 lib/Babble/Theme/planet/planet.css
 lib/Babble/Theme/planet/planet.tmpl
 lib/Babble/Theme/planet/sidebar.tmpl
+lib/Babble/Theme/planet_ttk.pm
+lib/Babble/Theme/planet_ttk/banner.html.tmpl
+lib/Babble/Theme/planet_ttk/head.html.tmpl
+lib/Babble/Theme/planet_ttk/main_content.html.tmpl
+lib/Babble/Theme/planet_ttk/planet_ttk.css
+lib/Babble/Theme/planet_ttk/planet_ttk.foaf.tmpl
+lib/Babble/Theme/planet_ttk/planet_ttk.html.tmpl
+lib/Babble/Theme/planet_ttk/planet_ttk.opml.tmpl
+lib/Babble/Theme/planet_ttk/sidebar.html.tmpl
 lib/Babble/Theme/sidebar.pm
 lib/Babble/Theme/sidebar/sidebar.tmpl
 lib/Babble/Utils.pm
-Makefile.PL
 MANIFEST			This list of files
 MANIFEST.SKIP
-META.yml
-README
+t/babble.t
+t/data/1.txt
+t/data/2.txt
+t/document.t
+t/dummy/Babble/Output/test.pm
 tools/install-theme.PL

@@ -108,13 +108,71 @@ sub new {
 
 =pod
 
+=item search()
+
+Given a list of filters (see Babble::Document::search for a
+specification of filters), returns all the documents that match the
+specified criteria. If no matches are found, returns an empty array.
+
+=cut
+
+sub search {
+	my ($self, @filters) = @_;
+	my @results;
+
+	foreach my $doc (@{$self->{documents}}) {
+		my @subres = $doc->search (@filters);
+		push (@results, @subres) if @subres;
+	}
+
+	return @results;
+}
+
+=pod
+
+=item all()
+
+Return all entries (the lowest level entries) as an array.
+
+=cut
+
+sub all () {
+	my $self = shift;
+	my @all;
+
+	foreach my $doc (@{$self->{documents}}) {
+		push (@all, $doc->all ());
+	}
+
+	return @all;
+}
+
+
+=pod
+
+=item sort()
+
+Sort all the elements in an aggregation by date, and return the sorted
+array of items.
+
+=cut
+
+sub sort () {
+	my $self = shift;
+
+	return sort { $b->date_iso cmp $a->date_iso }
+		$self->all ();
+}
+
+=pod
+
 =back
 
 =head1 AUTHOR
 
 Gergely Nagy, algernon@bonehunter.rulez.org
 
-Bugs should be reported at L<http://mantis.bonehunter.rulez.org/>.
+Bugs should be reported at L<http://bugs.bonehunter.rulez.org/babble>.
 
 =head1 SEE ALSO
 

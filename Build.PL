@@ -5,17 +5,18 @@ Module::Build->new (
 	license => "gpl",
 	requires => {
 		perl => '5.6.0',
-		Date::Manip => ''
+		Date::Manip => 0
 	  },
 	recommends => {
-		HTML::Template => '',
-		LWP::UserAgent => '',
-		XML::RSS => '',
-		Data::Dumper => ''
+		HTML::Template => 0,
+		LWP::UserAgent => 0,
+		XML::RSS => 0,
+		Data::Dumper => 0,
+		Template => 0
 	  },
 	PL_files => {
 		'tools/install-theme.PL' => [
-			'planet', 'advogato', 'sidebar'
+			'planet', 'advogato', 'sidebar', 'planet_ttk'
 		]
 	},
 	scripts => [ 'babble.pl' ],

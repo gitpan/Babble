@@ -24,7 +24,7 @@ use strict;
 
 =head1 NAME
 
-Babble - RSS Feed Aggregator
+Babble::Utils -- Non-essential Babble extensions and utility methods
 
 =head1 SYNOPSIS
 
@@ -79,7 +79,7 @@ sub Babble::force_limits () {
 
 Gergely Nagy, algernon@bonehunter.rulez.org
 
-Bugs should be reported at L<http://mantis.bonehunter.rulez.org/>.
+Bugs should be reported at L<http://bugs.bonehunter.rulez.org/babble>.
 
 =head1 SEE ALSO
 

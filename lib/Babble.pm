@@ -22,12 +22,13 @@ package Babble;
 use strict;
 use Carp;
 
+use Babble::Document::Collection;
 use Babble::Processors;
 
 use Exporter ();
 use vars qw($VERSION @ISA);
 
-$VERSION = '0.01';
+$VERSION = '0.02';
 @ISA = qw(Exporter);
 
 =pod
@@ -48,12 +49,12 @@ Babble - RSS Feed Aggregator and Blog engine
 	Babble::DataSource::HTTP->new (
 		-id => "Gergely Nagy",
 		-user_agent => "Babble/0.01 (Example)",
-		-url => 'http://midgard.debian.net/~algernon/blog/index.xml');
+		-url => 'http://bonehunter.rulez.org/~algernon/blog/index.xml'
+        )
+ );
  $babble->collect_feeds ();
- $babble->split_items ();
 
- print $babble->output (-type => "HTML",
-		        -template = "themes/sidebar/sidebar.tmpl");
+ print $babble->output (-theme => "sidebar");
 
 =head1 DESCRIPTION
 
@@ -102,9 +103,7 @@ sub new {
 	my $type = shift;
 	my $self = {
 		Sources => [],
-		Items => [],
-		Documents => [],
-		Dates => [],
+		Collection => Babble::Document::Collection->new (),
 		Param => {},
 		Config => {
 			-processors => [ \&Babble::Processors::default ]
@@ -160,8 +159,7 @@ sub add_sources (@) {
 Retrieve and process the feeds that were added to the Babble. All processor
 routines will be run by this very method.
 
-Please note that this must be called before the I<output> method, and
-even before I<sort_items>, as neither will automatically call it.
+Please note that this must be called before the I<output> method!
 
 =cut
 
@@ -171,56 +169,43 @@ sub collect_feeds () {
 	foreach my $source (@{$self->{Sources}}) {
 		my $collection = $source->collect ($self);
 
-		push (@{$self->{Documents}}, $collection);
-
 		foreach my $item (@{$collection->{documents}}) {
 			next unless defined($item->{'id'});
 
 			map { &$_ ($item, $collection, $source, $self) }
 				@{$self->{Config}->{-processors}};
-
-			push (@{$self->{Items}}, $item) if $item->{id};
 		}
-	}
 
-	@{$self->{Items}} =
-		sort { $b->date_iso cmp $a->date_iso } @{$self->{Items}};
+		push (@{$self->{Collection}->{documents}}, $collection);
+	}
 }
 
 =pod
 
-=item I<split_items>()
+=item sort()
 
-Split the retrieved feed items into an array of dates. So items
-submitted on the same date will be kept near each other. The structure
-of the resulting hash (C<$self->{Dates}>) is something like this:
-
-  $self->{Dates} = {
-	"2004-02-01" => {
-		date => "2004-02-01",
-		items => @list_of_items
-	}
-  };
-
-This resulting hash is required by most the output methods.
+Sort all the elements in an aggregation by date, and return the sorted
+array of items. Leaves the work to
+Babble::Document::Collection->sort().
 
 =cut
 
-sub split_items () {
+sub sort () {
 	my $self = shift;
-	my $titem = ();
 
-	foreach (@{$self->{Items}}) {
-		if (defined ($titem->{date})) {
-			if ($titem->{date} ne $_->date_date) {
-				push (@{$self->{Dates}}, $titem);
-				$titem = ();
-			}
-		}
-		$titem->{date} = $_->date_date;
-		push (@{$titem->{items}}, $_);
-	}
-	push (@{$self->{Dates}}, $titem);
+	return $self->{Collection}->sort ();
+}
+
+=pod
+
+=item all()
+
+Return all items in an aggregation as an array.
+
+=cut
+
+sub all () {
+	return $_[0]->{Collection}->all ();
 }
 
 =pod
@@ -274,6 +259,19 @@ sub output ($;) {
 
 =pod
 
+=item search()
+
+Dispatch everything to Babble::Document::Collection->search().
+
+=cut
+
+sub search {
+	my $self = shift;
+	return $self->{Collection}->search (@_);
+}
+
+=pod
+
 =back
 
 =head1 PROCESSORS
@@ -298,7 +296,7 @@ add them explicitly.
 
 Gergely Nagy, algernon@bonehunter.rulez.org
 
-Bugs should be reported at L<http://mantis.bonehunter.rulez.org/>.
+Bugs should be reported at L<http://bugs.bonehunter.rulez.org/babble>.
 
 =head1 SEE ALSO
 

@@ -16,7 +16,6 @@ foreach (@ARGV) {
 	$babble->add_params (%Babble);
 	$babble->add_sources (@Feeds);
 	$babble->collect_feeds ();
-	$babble->split_items ();
 
 	save ($Config{babble_outname_format}, "html",
 	      $babble->output (-template => $Config{babble_template},

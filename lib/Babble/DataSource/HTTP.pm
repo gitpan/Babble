@@ -1,4 +1,5 @@
-## Babble/DataSource/HTTP.pm (C) 2004 Gergely Nagy <algernon@bonehunter.rulez.org>
+## Babble/DataSource/HTTP.pm
+## Copyright (C) 2004 Gergely Nagy <algernon@bonehunter.rulez.org>
 ##
 ## This file is part of Babble.
 ##
@@ -28,6 +29,7 @@ use Babble::Document::Collection;
 
 use LWP::UserAgent;
 use XML::RSS;
+use Date::Manip;
 
 use Exporter ();
 use vars qw(@ISA);
@@ -45,10 +47,12 @@ Babble::DataSource::HTTP - HTTP source fetcher for Babble
  use Babble::DataSource::HTTP;
 
  my $babble = Babble->new ();
- $babble->add_source
-	(Babble::DataSource::HTTP->new (
+ $babble->add_sources (
+	Babble::DataSource::HTTP->new (
 		-id => "Gergely Nagy",
-		-url => "http://midgard.debian.net/~algernon/blog/index.xml"));
+		-url => "http://midgard.debian.net/~algernon/blog/index.xml"
+	)
+ );
  ...
 
 =head1 DESCRIPTION
@@ -111,6 +115,7 @@ sub collect () {
 		$subject = $rss->channel ('dc')->{subject};
 		$creator = $rss->channel ('dc')->{creator};
 	}
+	$date = "today" unless $date;
 
 	$collection = Babble::Document::Collection->new (
 		author => $creator,
@@ -119,7 +124,7 @@ sub collect () {
 		subject => $subject,
 		id => $rss->channel ('link'),
 		link => $self->{-url},
-		date => $date
+		date => ParseDate ($date)
 	);
 
 	foreach (@{$rss->{items}}) {
@@ -136,7 +141,7 @@ sub collect () {
 
 		$item = Babble::Document->new (
 			author => $author,
-			date => $date,
+			date => ParseDate ($date),
 			content => $_->{description},
 			title => $_->{title},
 			id => $_->{link},
@@ -157,12 +162,12 @@ sub collect () {
 
 Gergely Nagy, algernon@bonehunter.rulez.org
 
-Bugs should be reported at L<http://mantis.bonehunter.rulez.org/>.
+Bugs should be reported at L<http://bugs.bonehunter.rulez.org/babble>.
 
 =head1 SEE ALSO
 
 Babble::Document, Babble::Document::Collection,
-Babble::DataSource::HTML
+Babble::DataSource
 
 =cut
 

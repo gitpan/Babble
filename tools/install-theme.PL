@@ -5,8 +5,16 @@ use File::Path;
 
 foreach (@ARGV) {
 	my $theme = $_;
-	my @files = ( "banner.tmpl", "head.tmpl", "main_content.tmpl",
-		      "sidebar.tmpl", $theme . ".tmpl", $theme . ".css" );
+	my @files = (
+		"banner.tmpl", "head.tmpl", "main_content.tmpl",
+		"sidebar.tmpl", $theme . ".tmpl", $theme . ".css",
+
+		"banner.html.tmpl", "head.html.tmpl",
+		"main_content.html.tmpl", "sidebar.html.tmpl",
+		$theme . ".html.tmpl",
+
+		$theme . ".foaf.tmpl", $theme . ".opml.tmpl"
+	);
 
 	mkpath ("blib/lib/Babble/Theme/" . $theme, 0, 0755);
 

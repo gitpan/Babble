@@ -1,0 +1,38 @@
+Changes -- list of user visible changes			-*- outline -*-
+
+* Babble 0.02 -- 2004-03-09
+
+** Lots of documentation updates.
+
+Documentation was cleared up in many places, and was generally made
+better.
+
+** Internal restructuring.
+
+The internal structure of objects was greatly simplified, resulting
+in less memory usage and faster operation. Not to mention easier
+maintainance.
+
+** Date parsing fixes
+
+The Babble::DataSource modules often failed to parse the dates they
+encountered, this was fixed.
+
+** New output method and theme
+
+There is a new output method, Babble::Output::TTk, which uses the
+Template Toolkit, and is the preferred output method as of now.
+
+There is a highly customisable theme based on it,
+Babble::Theme::planet_ttk. This one provides not only a HTML
+template, but FOAF and OPML templates too.
+
+** Test suite
+
+The beginnings of a test suite is included with this release.
+
+* Babble 0.01 -- 2004-03-07
+
+Initial release.
+
+# arch-tag: 6c29c03c-d34a-45ec-8078-1dd14c178b5d

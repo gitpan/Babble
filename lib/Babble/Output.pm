@@ -68,11 +68,11 @@ sub output {
 
 Gergely Nagy, algernon@bonehunter.rulez.org
 
-Bugs should be reported at L<http://mantis.bonehunter.rulez.org/>.
+Bugs should be reported at L<http://bugs.bonehunter.rulez.org/babble>.
 
 =head1 SEE ALSO
 
-Babble::Output::HTML, Babble::Output::RSS
+Babble::Output::HTML, Babble::Output::RSS, Babble::Output::TTk
 
 =cut
 

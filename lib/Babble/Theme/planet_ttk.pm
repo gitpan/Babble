@@ -1,4 +1,4 @@
-## Babble/Theme/advogato.pm
+## Babble/Theme/planet_ttk.pm
 ## Copyright (C) 2004 Gergely Nagy <algernon@bonehunter.rulez.org>
 ##
 ## This file is part of Babble.
@@ -17,11 +17,14 @@
 ## along with this program; if not, write to the Free Software
 ## Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 
-package Babble::Theme::advogato;
+package Babble::Theme::planet_ttk;
 
 use strict;
+
+use Date::Manip;
+
 use Babble::Theme;
-use Babble::Output::HTML;
+use Babble::Output::TTk;
 
 use Exporter ();
 use vars qw(@ISA);
@@ -31,13 +34,14 @@ use vars qw(@ISA);
 
 =head1 NAME
 
-Babble::Theme::advogato - Advogato inspired theme for Babble
+Babble::Theme::planet_ttk - Planet inspired theme for Babble
 
 =head1 DESCRIPTION
 
-The advogato theme was inspired by the L<http://advogato.org/> theme,
-and builds upon that style heavily. It provides quite a few features,
-but is more suited for smaller collections.
+The planet theme was inspired by the L<http://www.planetapache.org/>
+and L<http://planet.twistedmatrix.com/> sites. Being a Template
+Toolkit based theme, it is quite powerful, and offers a lot of
+features.
 
 =head1 TEMPLATE VARIABLES
 
@@ -62,7 +66,7 @@ Optional description of the babble.
 =item meta_css_link
 
 Optional, but recommended, link to the CSS stylesheet to use. Defaults
-to I<advogato.css>.
+to I<planet_ttk.css>.
 
 =item meta_charset
 
@@ -100,6 +104,12 @@ Link to the feed the Babble provides.
 
 Turn off generating the I<Subscriptions> area in the sidebar.
 
+=item template_knob_datebar
+
+Add a so-called I<datebar> to the sidebar. This will contain local
+links to each date an entry is available for. Handy when the
+collection spans more than a few days.
+
 =item template_knob_planetarium
 
 Enables the Planetarium, a link collection to related or unrelated
@@ -108,6 +118,10 @@ paramater must be made available to the template. This should contain
 an array of hashes. The layout should be as follows:
 
   planetarium => [ { name => 'Example', url => 'http://example.org/' } ]
+
+=item template_knob_no_date_head
+
+Disables generating anchors (and headings) for each day.
 
 =item template_knob_no_content_links
 
@@ -122,6 +136,21 @@ date. This can be turned off with this knob.
 
 =back
 
+=head1 METHODS
+
+=over 4
+
+=cut
+
+=pod
+
+=item output()
+
+This method sets up parameters for the Babble::Output::TTK-E<gt>output
+method. It recognises only the I<-format> option, which determines
+which output format is used. Currently B<html>, B<foaf> and B<opml>
+are provided by the template.
+
 =cut
 
 sub output {
@@ -130,16 +159,19 @@ sub output {
 	$self->_merge_params
 		($babble, \%params,
 		 {
-			 -template => $self->_find_template ('advogato'),
-			 meta_css_link => "advogato.css"
+			 -template => $self->_find_template ('planet_ttk',
+						     $params{-format}),
+			 meta_css_link => "planet_ttk.css",
+			 UnixDate => \&UnixDate
 		 }
 	 );
 
-
-	return Babble::Output::HTML->output ($babble, %params);
+	return Babble::Output::TTk->output ($babble, %params);
 }
 
 =pod
+
+=back
 
 =head1 AUTHOR
 
@@ -149,10 +181,10 @@ Bugs should be reported at L<http://bugs.bonehunter.rulez.org/babble>.
 
 =head1 SEE ALSO
 
-Babble::Theme, Babble::Output::HTML
+Babble::Theme, Babble::Output::TTk
 
 =cut
 
 1;
 
-# arch-tag: c52c2c92-e0de-4ad3-a958-8ca6ecc70c69
+# arch-tag: 60a05dc2-c29d-4fb5-bef5-44a90098594f

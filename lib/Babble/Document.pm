@@ -164,9 +164,7 @@ sub date_text () {
 
 =item date_date()
 
-Returns only the date part of the documents submission date. This one
-is used for splitting up a Babble's item collection into per-date
-structures. See Babble::split_items() for an exmplanation.
+Returns only the date part of the documents submission date.
 
 =cut
 
@@ -178,13 +176,82 @@ sub date_date () {
 
 =pod
 
+=item search()
+
+Given a list of filters (see later), checks if the document matches
+all the criteria specified in them. If yes, returns an array
+consisting of the Babble::Document object. Otherwise returns an empty
+array.
+
+The filters are simple hashrefs, with two mandatory keys: I<field> and
+I<pattern>. The first one determines which field the search is
+performed on (this can be any one of the available Babble::Document
+properties), and I<pattern> is the pattern it should match.
+
+Optional keys include I<inverse>, which reverses the check, and
+I<transform>, which is a code reference, which will be applied to the
+source filed before comparsion.
+
+=cut
+
+sub search {
+	my ($self, @filters) = @_;
+	my $match = 1;
+
+	foreach my $filter (@filters) {
+		my $source = $self->{$filter->{field}};
+
+		if (!$source) {
+			next if ($filter->{inverse});
+
+			$match = 0;
+			last;
+		}
+
+		$source = $filter->{transform} ($source)
+			if ($filter->{transform});
+
+		if ($filter->{inverse}) {
+			if ($source =~ /$filter->{pattern}/) {
+				$match = 0;
+				last;
+			}
+		} else {
+			if ($source !~ /$filter->{pattern}/) {
+				$match = 0;
+				last;
+			}
+		}
+	}
+
+	return ($self) if $match;
+	return ();
+}
+
+=pod
+
+=item all()
+
+Return ourselves. This is mostly here so that
+Babble::Document::Collection->all() can call $doc->all(), which in
+turn makes it possible to have Babble::Document::Collections nested,
+and still work.
+
+=cut
+
+sub all () {
+	return ($_[0]);
+}
+
+=pod
+
 =back
 
 =head1 AUTHOR
 
 Gergely Nagy, algernon@bonehunter.rulez.org
 
-Bugs should be reported at L<http://mantis.bonehunter.rulez.org/>.
+Bugs should be reported at L<http://bugs.bonehunter.rulez.org/babble>.
 
 =head1 SEE ALSO
 

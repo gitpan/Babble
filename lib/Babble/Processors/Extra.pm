@@ -35,7 +35,7 @@ Babble::Processors::Extra - Extra processors for Babble
  use Babble::Processors::Extra;
 
  my $babble = Babble->new
-    (Processors => [ \&Babble::Processors::Extra::datecache ],
+    (-processors => [ \&Babble::Processors::Extra::datecache ],
      datecache_file => "/var/cache/babble/datecache.db");
 
 =head1 DESCRIPTION
@@ -135,7 +135,7 @@ sub creator_map {
 
 Gergely Nagy, algernon@bonehunter.rulez.org
 
-Bugs should be reported at L<http://mantis.bonehunter.rulez.org/>.
+Bugs should be reported at L<http://bugs.bonehunter.rulez.org/babble>.
 
 =head1 SEE ALSO
 
