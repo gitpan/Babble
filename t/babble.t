@@ -48,10 +48,10 @@ like ($all[0]->{title}, qr/First blog entry/,
       "First document's title is like 'First blog entry'");
 
 # Can we filter?
-my @result = $object->search ({
+my @result = $object->search ([{
 	field => "title",
 	pattern => "Second"
-});
+}]);
 
 ok ($#result == 0, "Search for /Second/");
 

@@ -5,8 +5,7 @@
 ##
 ## Babble is free software; you can redistribute it and/or modify it
 ## under the terms of the GNU General Public License as published by
-## the Free Software Foundation; either version 2 of the License, or
-## (at your option) any later version.
+## the Free Software Foundation; version 2 dated June, 1991.
 ##
 ## Babble is distributed in the hope that it will be useful, but WITHOUT
 ## ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
@@ -65,10 +64,6 @@ Babble::DataSource::RSS objects.
 
 =over 4
 
-=cut
-
-=pod
-
 =item I<new>(%params)
 
 Parses the OPML document specified in the I<-location> parameter, and
@@ -82,11 +77,15 @@ sub new {
 	my @sources;
 	my $opml = XML::OPML->new ();
 
-	$opml->parse (Babble::Transport->get (%params));
+	my $source = Babble::Transport->get (\%params);
+	return undef unless $source;
+	$opml->parse ($source);
+
 	foreach my $outline (@{$opml->outline}) {
-		push (@sources, Babble::DataSource::RSS->new
-			      (-id => $outline->{text},
-			       -location => $outline->{xmlUrl}));
+		my %nparams = %params;
+		$nparams{-id} = $outline->{text};
+		$nparams{-location} = $outline->{xmlUrl};
+		push (@sources, Babble::DataSource::RSS->new (%nparams));
 	}
 
 	return @sources;

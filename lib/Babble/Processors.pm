@@ -5,8 +5,7 @@
 ##
 ## Babble is free software; you can redistribute it and/or modify it
 ## under the terms of the GNU General Public License as published by
-## the Free Software Foundation; either version 2 of the License, or
-## (at your option) any later version.
+## the Free Software Foundation; version 2 dated June, 1991.
 ##
 ## Babble is distributed in the hope that it will be useful, but WITHOUT
 ## ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
@@ -41,10 +40,6 @@ them off, may he be able to re-use any of these.
 
 =over 4
 
-=cut
-
-=pod
-
 =item master()
 
 Adds a B<master> key to the I<item>: the B<id> key of the
@@ -58,7 +53,7 @@ from each and every item.
 sub master {
 	my ($item, $channel) = @_;
 
-	$item->{master} = $channel->{id};
+	$$item->{master} = $$channel->{id};
 }
 
 =pod
@@ -73,7 +68,7 @@ item does not have an author yet.
 sub creator {
 	my ($item, undef, $source) = @_;
 
-	$item->{author} = $source->{-id} unless $item->{author};
+	$$item->{author} = $$source->{-id} unless $$item->{author};
 }
 
 =pod
@@ -88,8 +83,8 @@ representation of the items submission date for use by templates.
 sub date {
 	my $item = shift;
 
-	$item->{date_text} = $item->date_text;
-	$item->{date_iso} = $item->date_iso;
+	$$item->{date_text} = $$item->date_text;
+	$$item->{date_iso} = $$item->date_iso;
 }
 
 =pod

@@ -14,7 +14,8 @@ Module::Build->new (
 		Data::Dumper => 0,
 		Template => 0,
 		Config::IniFiles => 0,
-		XML::OPML => 0
+		XML::OPML => 0,
+		Text::Iconv => 0,
 	  },
 	PL_files => {
 		'tools/install-theme.PL' => [

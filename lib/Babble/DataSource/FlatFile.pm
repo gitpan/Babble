@@ -5,8 +5,7 @@
 ##
 ## Babble is free software; you can redistribute it and/or modify it
 ## under the terms of the GNU General Public License as published by
-## the Free Software Foundation; either version 2 of the License, or
-## (at your option) any later version.
+## the Free Software Foundation; version 2 dated June, 1991.
 ##
 ## Babble is distributed in the hope that it will be useful, but WITHOUT
 ## ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
@@ -61,23 +60,21 @@ Babble::DataSource::FlatFile - Flat file source fetcher for Babble
 Babble::DataSource::FlatFile implements a Babble data source class
 that fetches documents directly from the filesystem.
 
-=head1 METHODS
-
-=over 4
-
 =cut
 
 my $permalink_blosxom = sub {
 	my ($base, $file, $date, $ext) = @_;
-	my $anchor = basename ($file);
+	my $anchor = basename ($$file);
 
-	$anchor =~ s/$ext$//g;
+	$anchor =~ s/$$ext$//g;
 
-	return $base . UnixDate (ParseDate ($date),
+	return $$base . UnixDate (ParseDate ($$date),
 				 "%Y/%m/%d/#") . $anchor;
 };
 
-=pod
+=head1 METHODS
+
+=over 4
 
 =item I<new>(B<%params>)
 
@@ -90,10 +87,10 @@ permanent link generator, see later); and I<-permalink_gen>, a code
 reference that is used to generate links to documents.
 
 The method specified in I<-permalink_gen> takes four arguments:
-I<base>, I<file>, I<date> and I<ext>. Base is what we specified using
-I<-permalink_base>, file is the full path to the filename we're
-currently operating on, date is its submission date, and ext is its
-extension.
+I<base>, I<file>, I<date> and I<ext>. All of them are string scalar
+references. Base is what we specified using I<-permalink_base>, file
+is the full path to the filename we're currently operating on, date is
+its submission date, and ext is its extension.
 
 =cut
 
@@ -144,7 +141,7 @@ sub collect($) {
 
 	foreach ("meta_title", "meta_desc", "meta_link", "meta_owner_email",
 		 "meta_subject", "meta_feed_link", "meta_owner") {
-		$args{$_} = $babble->{Params}->{$_};
+		$args{$_} = $$babble->{Params}->{$_};
 
 		$args{$_} = $self->{$_} if (defined $self->{$_});
 		$args{$_} = "" if (!$args{$_});
@@ -162,7 +159,9 @@ sub collect($) {
 		author => $args{meta_owner} || $args{meta_owner_email},
 		content => $args{meta_desc},
 		date => ParseDate ("today"),
-		subject => $args{meta_subject}
+		subject => $args{meta_subject},
+		name => $self->{-id} || $args{meta_owner} ||
+			$args{meta_owner_email} || $args{meta_title},
 	);
 
 	foreach my $file (@files) {
@@ -182,9 +181,9 @@ sub collect($) {
 		$subject = "main" unless $subject;
 
 		$date = gmtime (stat ($file)->mtime);
-		$link = $self->{-permalink_gen} ($self->{-permalink_base},
-						 $file, $date,
-						 $self->{-extension});
+		$link = $self->{-permalink_gen} (\$self->{-permalink_base},
+						 \$file, \$date,
+						 \$self->{-extension});
 
 		$doc = Babble::Document->new (
 			title => $title,

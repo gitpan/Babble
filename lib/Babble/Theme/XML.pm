@@ -5,8 +5,7 @@
 ##
 ## Babble is free software; you can redistribute it and/or modify it
 ## under the terms of the GNU General Public License as published by
-## the Free Software Foundation; either version 2 of the License, or
-## (at your option) any later version.
+## the Free Software Foundation; version 2 dated June, 1991.
 ##
 ## Babble is distributed in the hope that it will be useful, but WITHOUT
 ## ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
@@ -76,10 +75,6 @@ Link to the homepage of the Babble.
 
 =over 4
 
-=cut
-
-=pod
-
 =item output()
 
 This method sets up parameters for the Babble::Output::TTK-E<gt>output
@@ -90,18 +85,18 @@ are provided by the theme.
 =cut
 
 sub output {
-	my ($self, $babble, %params) = @_;
+	my ($self, $babble, $params) = @_;
 
 	$self->_merge_params
-		($babble, \%params,
+		($babble, $params,
 		 {
 			 -template => $self->_find_template ('XML',
-						     $params{-format}),
+						     $params->{-format}),
 			 UnixDate => \&UnixDate
 		 }
 	 );
 
-	return Babble::Output::TTk->output ($babble, %params);
+	return Babble::Output::TTk->output ($babble, $params);
 }
 
 =pod

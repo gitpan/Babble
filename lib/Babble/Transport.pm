@@ -5,8 +5,7 @@
 ##
 ## Babble is free software; you can redistribute it and/or modify it
 ## under the terms of the GNU General Public License as published by
-## the Free Software Foundation; either version 2 of the License, or
-## (at your option) any later version.
+## the Free Software Foundation; version 2 dated June, 1991.
 ##
 ## Babble is distributed in the hope that it will be useful, but WITHOUT
 ## ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
@@ -20,7 +19,9 @@
 package Babble::Transport;
 
 use strict;
+use Babble::Cache;
 use Babble::Transport::LWP;
+use Date::Manip;
 
 =pod
 
@@ -44,23 +45,44 @@ classes.
 
 =over 4
 
-=cut
-
-=pod
-
 =item get
 
 Return the contents of a given location (given in the I<-location>
-argument) as a string scalar. Only the I<-location> argument is
-recognised by this method, all others, and even I<-location> will be
-passed on to the relevant sub-module's B<get> method.
+argument) as a string scalar. If a I<-cache_db> argument is given,
+this method will use the given file as a cache - to save successfully
+retrieved feeds and to check the cache if it has an older version, in
+case the feed couldn't be retrieved. Caching is done via
+Babble::Cache.
+
+If a I<-preprocessors> parameter is given, the result will be filtered
+through the coderefs contained in this arrayref. The function should
+take only one argument: a scalar reference, and operate on that
+in-place.
 
 =cut
 
 sub get {
 	my ($self, $params) = @_;
+	our $cache = {};
+	my $loc = \$params->{-location};
 
-	return Babble::Transport::LWP->get ($params);
+	$params->{-headers}->{'If-Modified-Since'} =
+		Babble::Cache::cache_get ('Feeds', $$loc, 'time');
+
+	my $result = Babble::Transport::LWP->get ($params);
+
+	$result = Babble::Cache::cache_update (
+		'Feeds', $$loc,
+		{
+			feed => $result,
+			time => UnixDate ("now", "%a, %d %b %Y %H:%M:%S GMT")
+		}, 'feed');
+
+	foreach my $preproc (@{$params->{-preprocessors}}) {
+		&$preproc (\$result);
+	}
+
+	return $result;
 }
 
 =pod
@@ -75,7 +97,7 @@ Bugs should be reported at L<http://bugs.bonehunter.rulez.org/babble>.
 
 =head1 SEE ALSO
 
-Babble::Transport::LWP
+Babble::Transport::LWP, Babble::Cache
 
 =cut
 

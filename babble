@@ -6,8 +6,7 @@
 ##
 ## Babble is free software; you can redistribute it and/or modify it
 ## under the terms of the GNU General Public License as published by
-## the Free Software Foundation; either version 2 of the License, or
-## (at your option) any later version.
+## the Free Software Foundation; version 2 dated June, 1991.
 ##
 ## Babble is distributed in the hope that it will be useful, but WITHOUT
 ## ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
@@ -22,8 +21,11 @@ use strict;
 use Config::IniFiles;
 use Getopt::Long qw(:config no_ignore_case no_auto_abbrev);
 use Pod::Usage;
+use Text::Iconv;
 
 use Babble;
+use Babble::Cache;
+use Babble::Utils;
 use Babble::DataSource::RSS;
 
 my $verbose = 0;
@@ -44,6 +46,8 @@ if ($version) {
 	exit 0;
 }
 
+$| = 1;
+
 print "Reading configuration from " . $ARGV[0] . " ...\n"
 	if ($verbose >= 2);
 
@@ -56,23 +60,51 @@ foreach my $param ($cfg->Parameters ('Babble')) {
 	$babble_config{$param} = $cfg->val ('Babble', $param);
 }
 
+print "Loading cache ...\n" if ($verbose >= 2);
+Babble::Cache::cache_load ($babble_config{cache_db});
+
 print "Recording sources ...\n" if ($verbose >= 2);
 
 foreach my $feed ($cfg->Sections) {
 	next if ($feed =~ /^(theme|babble)/i);
 
+	if ($cfg->val ($feed, 'type') &&
+	    $cfg->val ($feed, 'type') =~ /^opml$/i ) {
+		eval q{use Babble::DataSource::OPML;};
+		die $@ if $@;
+
+		push (@feeds, Babble::DataSource::OPML->new (
+			-location => $feed,
+			-cache_db => $babble_config{cache_db},
+			-preprocessors => [ \&utficate, \&htmlfix ],
+			-id => $cfg->val ($feed, 'name')));
+		next;
+	}
+
 	push (@feeds, Babble::DataSource::RSS->new (
 		-location => $feed,
+		-cache_db => $babble_config{cache_db},
+		-preprocessors => [ \&utficate, \&htmlfix ],
 		-id => $cfg->val ($feed, 'name')));
 }
 
-my $babble = Babble->new ();
+my $babble = Babble->new (
+	-cache_db => $babble_config{cache_db},
+	-limit_max => $babble_config{limit},
+);
+
 $babble->add_params (%babble_config);
 $babble->add_sources (@feeds);
 
 print "Collecting sources ...\n" if ($verbose >= 2);
 
 $babble->collect_feeds ();
+
+print "Caching ...\n" if ($verbose >= 2);
+
+$babble->cache (
+	-cache_fields => [ 'id', 'date' ]
+);
 
 foreach my $theme (split (/ /, $babble_config{themes})) {
 	my %theme_config = ();
@@ -104,6 +136,26 @@ foreach my $theme (split (/ /, $babble_config{themes})) {
 		print OUTF $babble->output (%theme_config);
 		close (OUTF);
 	}
+}
+
+sub utficate {
+	my $text = shift;
+	my $c = Text::Iconv->new ('iso-8859-2', 'utf-8');
+	$$text = $c->convert ($$text);
+}
+
+sub htmlfix {
+	my $text = shift;
+
+	return unless $$text;
+
+	$$text =~ s/&nbsp;/ /;
+	$$text =~ s/\&((?!\w+;))/\&amp;$1/g;
+}
+
+END {
+	print "Saving cache ...\n" if ($verbose >= 2);
+	Babble::Cache::cache_dump ($babble_config{cache_db});
 }
 
 =pod
@@ -175,6 +227,7 @@ formats); and I<output>, the name of the output file.
  [Babble]
  themes = html rss20
  output_dir = output
+ cache_db = feed_cache.db
 
  [theme:html]
  theme = planet_gray

@@ -5,8 +5,7 @@
 ##
 ## Babble is free software; you can redistribute it and/or modify it
 ## under the terms of the GNU General Public License as published by
-## the Free Software Foundation; either version 2 of the License, or
-## (at your option) any later version.
+## the Free Software Foundation; version 2 dated June, 1991.
 ##
 ## Babble is distributed in the hope that it will be useful, but WITHOUT
 ## ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
@@ -35,8 +34,10 @@ Babble::Processors::Extra - Extra processors for Babble
  use Babble::Processors::Extra;
 
  my $babble = Babble->new
-    (-processors => [ \&Babble::Processors::Extra::datecache ],
-     datecache_file => "/var/cache/babble/datecache.db");
+    (-processors => [ \&Babble::Processors::Extra::creator_map ]);
+ $babble->add_sources (Babble::DataSource::RSS->new (
+    -location => $some_location,
+    -creator_map => { joe => { author => "Joe R. Blogger" } }));
 
 =head1 DESCRIPTION
 
@@ -49,66 +50,6 @@ usually require some configuration.
 
 =over 4
 
-=cut
-
-=pod
-
-=item datecache()
-
-This processor makes one able to approximate the submission date of
-items which lack such a field in the feed. It does so, by keeping a
-cache of items, and upon the first time it sees an undated item, it
-uses the current date for the missing field. Next time it sees the
-same undated item, it gets the date from the cache.
-
-For the cache to be persistent, it needs to be kept between runs,
-therefore it is saved to disc. One can - and has to - configurte the
-location of this item, by passing a I<datecache_file> argument to the
-C<Babble>'s constructor.
-
-=cut
-
-sub datecache {
-	my ($item, $channel, $source, $babble) = @_;
-	our $cache = {};
-	my $date;
-
-	return unless ($babble->{Config}->{datecache_file});
-
-	if (-e $babble->{Config}->{datecache_file}) {
-		require $babble->{Config}->{datecache_file};
-	}
-
-	if ($item->{date}) {
-		$date = $item->{date};
-	} else {
-		$date = UnixDate ("today", "%Y-%m-%d %H:%M:%S");
-	}
-
-	if (!$cache->{$channel->{title}}) {
-		$cache->{$channel->{title}} = {
-		       $item->{id} => $date
-		};
-	} else {
-		if ($cache->{$channel->{title}}->{$item->{id}} &&
-		    !$item->{date}) {
-			$item->{date} =
-			  $cache->{$channel->{title}}->{$item->{id}};
-		} else {
-			$cache->{$channel->{title}}->{$item->{id}} = $date;
-		}
-	}
-
-	$Data::Dumper::Terse = 1;
-
-	open (OUTF, ">" . $babble->{Config}->{datecache_file});
-	print OUTF "# Automatically generated file. Edit carefully!\n";
-	print OUTF '$cache = ' . Dumper ($cache) . ";\n1;\n";
-	close OUTF;
-}
-
-=pod
-
 =item creator_map()
 
 This processor takes the B<-creator_map> field of the I<source> and if
@@ -120,11 +61,12 @@ pointed to by the source's key to the item.
 sub creator_map {
 	my ($item, $channel, $source, undef) = @_;
 
-	return unless defined $source->{-creator_map}->{$item->{author}};
+	return unless defined $$source->{-creator_map}->{$$item->{author}};
 
 	map {
-		$item->{$_} = $source->{-creator_map}->{$item->{author}}->{$_}
-	} keys (%{$source->{-creator_map}->{$item->{author}}});
+		$$item->{$_} =
+			$$source->{-creator_map}->{$$item->{author}}->{$_}
+	} keys (%{$$source->{-creator_map}->{$$item->{author}}});
 }
 
 =pod

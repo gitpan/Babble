@@ -5,8 +5,7 @@
 ##
 ## Babble is free software; you can redistribute it and/or modify it
 ## under the terms of the GNU General Public License as published by
-## the Free Software Foundation; either version 2 of the License, or
-## (at your option) any later version.
+## the Free Software Foundation; version 2 dated June, 1991.
 ##
 ## Babble is distributed in the hope that it will be useful, but WITHOUT
 ## ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
@@ -72,10 +71,6 @@ others.
 =head1 METHODS
 
 =over 4
-
-=cut
-
-=pod
 
 =item new()
 
@@ -176,12 +171,12 @@ sub date_date () {
 
 =pod
 
-=item search()
+=item search($filters)
 
-Given a list of filters (see later), checks if the document matches
-all the criteria specified in them. If yes, returns an array
-consisting of the Babble::Document object. Otherwise returns an empty
-array.
+Given a list of filters (see later) in an arrayref, checks if the
+document matches all the criteria specified in them. If yes, returns
+an array consisting of the Babble::Document object. Otherwise returns
+an empty array.
 
 The filters are simple hashrefs, with two mandatory keys: I<field> and
 I<pattern>. The first one determines which field the search is
@@ -189,38 +184,34 @@ performed on (this can be any one of the available Babble::Document
 properties), and I<pattern> is the pattern it should match.
 
 Optional keys include I<inverse>, which reverses the check, and
-I<transform>, which is a code reference, which will be applied to the
-source filed before comparsion.
+I<cmp>, which will be used as a comparsion function if set, instead of
+the default regexp matcher.
 
 =cut
 
 sub search {
-	my ($self, @filters) = @_;
+	my ($self, $filters) = @_;
 	my $match = 1;
 
-	foreach my $filter (@filters) {
-		my $source = $self->{$filter->{field}};
-
-		if (!$source) {
+	foreach my $filter (@$filters) {
+		unless ($self->{$filter->{field}}) {
 			next if ($filter->{inverse});
 
 			$match = 0;
 			last;
 		}
 
-		$source = $filter->{transform} ($source)
-			if ($filter->{transform});
-
-		if ($filter->{inverse}) {
-			if ($source =~ /$filter->{pattern}/) {
-				$match = 0;
-				last;
-			}
-		} else {
-			if ($source !~ /$filter->{pattern}/) {
-				$match = 0;
-				last;
-			}
+		my $cmp = $filter->{cmp} ||
+			sub {
+				my ($a, $b) = @_;
+				return $a =~ /$b/;
+			};
+		my $res = &$cmp ($self->{$filter->{field}},
+				 $filter->{pattern});
+		if ((!$res && !$filter->{inverse}) ||
+		    ($res && $filter->{inverse})) {
+			$match = 0;
+			last;
 		}
 	}
 

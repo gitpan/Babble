@@ -5,8 +5,7 @@
 ##
 ## Babble is free software; you can redistribute it and/or modify it
 ## under the terms of the GNU General Public License as published by
-## the Free Software Foundation; either version 2 of the License, or
-## (at your option) any later version.
+## the Free Software Foundation; version 2 dated June, 1991.
 ##
 ## Babble is distributed in the hope that it will be useful, but WITHOUT
 ## ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
@@ -55,11 +54,7 @@ available items.
 
 =over 4
 
-=cut
-
-=pod
-
-=item I<output>(B<$babble>, B<%params>)
+=item I<output>(B<$babble>, B<$params>)
 
 This output method recognises the following arguments, either via the
 passed C<Babble> objects ->{Params} hashref, or via %params:
@@ -93,16 +88,14 @@ This too, is an optional argument.
 =cut
 
 sub output {
-	my $self = shift;
-	my $babble = shift;
-	my %params = @_;
+	my ($self, $babble, $params) = @_;
 	my %args;
 
 	foreach ("meta_title", "meta_desc", "meta_link",
 		 "meta_owner_email") {
-		$args{$_} = $babble->{Params}->{$_};
+		$args{$_} = $$babble->{Params}->{$_};
 
-		$args{$_} = $params{$_} if (defined $params{$_});
+		$args{$_} = $params->{$_} if (defined $params->{$_});
 		$args{$_} = "" if (!$args{$_});
 	}
 
@@ -119,7 +112,7 @@ sub output {
 			     }
 		      );
 
-	foreach my $item ($babble->sort ()) {
+	foreach my $item ($$babble->sort ()) {
 		$rss->add_item (
 			title => "<![CDATA[" . $item->{title} . "]]>",
 			link => $item->{id},

@@ -5,8 +5,7 @@
 ##
 ## Babble is free software; you can redistribute it and/or modify it
 ## under the terms of the GNU General Public License as published by
-## the Free Software Foundation; either version 2 of the License, or
-## (at your option) any later version.
+## the Free Software Foundation; version 2 dated June, 1991.
 ##
 ## Babble is distributed in the hope that it will be useful, but WITHOUT
 ## ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
@@ -44,15 +43,11 @@ descendants must implement at least the methods this class implements.
 
 =over 4
 
-=cut
+=item I<output>(B<$babble>, B<$params>)
 
-=pod
-
-=item I<output>(B<$babble>, B<%params>)
-
-This method takes the Babble object in its first argument, and all the
-supplied parameters, and does whatever is necessary to return a
-scalar, containing the output.
+This method takes the Babble object refernece in its first argument,
+and all the supplied parameters (as a hashref), and does whatever is
+necessary to return a scalar, containing the output.
 
 =cut
 

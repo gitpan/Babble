@@ -19,8 +19,7 @@
 	[% FOREACH item = collection.documents %]
 	<foaf:Member>
 		<foaf:Agent>
-			[%- IF item.author -%][% tmp_author = item.author %][% ELSE %][% tmp_author = item.title %][% END %]
-			<foaf:name>[% tmp_author %]</foaf:name>
+			<foaf:name>[% item.name %]</foaf:name>
 			<foaf:weblog>
 				<foaf:Document rdf:about="[% item.id %]">
 					<dc:title>[% item.title %]</dc:title>

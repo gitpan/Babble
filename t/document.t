@@ -2,7 +2,7 @@
 use strict;
 use Cwd;
 use Date::Manip;
-use Test::More tests => 13;
+use Test::More tests => 15;
 
 use_ok ("Babble::Document");
 
@@ -27,17 +27,46 @@ ok (eq_array ($object->all(), ($object)),
     "\$object->all() is OK");
 
 # Test search
-my @res = $object->search ({field => "title", pattern => "foo"});
+my @res = $object->search ([{field => "title", pattern => "foo"}]);
 
 ok ($#res == -1, "\$object->search() is OK");
 
 # Test inverse search
 ok (eq_array ($object->search
-		      ({
+		      ([{
 			      field => "title",
 			      pattern => "Foo",
 			      inverse => 1,
-		      }), ($object)),
+		      }]), ($object)),
     "inversed \$object->search() is OK");
+
+# Test search with a custom comparsion function
+ok (eq_array ($object->search
+		      ([{
+			      field => "date",
+			      pattern => ParseDate ("2003-01-01 00:00:00"),
+			      cmp => sub {
+				      use Date::Manip;
+
+				      my ($a, $b) = @_;
+				      return (Date_Cmp ($a, $b) > 0);
+			      }
+		      }]), ($object)),
+    "\$object->search with a custom comparsion is OK");
+
+# Same, but inversed
+@res = $object->search ([{
+	field => "date",
+	inverse => 1,
+	pattern => ParseDate ("2003-01-01 00:00:00"),
+	cmp => sub {
+		use Date::Manip;
+
+		my ($a, $b) = @_;
+		return (Date_Cmp ($a, $b) > 0);
+	}
+}]);
+ok ($#res == -1,
+    "\$object->search() with a custom comparsion, inversed is OK");
 
 # arch-tag: 8ce4598d-4750-4879-803b-eeb02cf9f672

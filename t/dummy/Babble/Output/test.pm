@@ -7,7 +7,7 @@ sub output {
 	my ($self, $babble) = @_;
 	my $output;
 
-	foreach my $item ($babble->all ()) {
+	foreach my $item ($$babble->all ()) {
 		$output .= "Title: " . $item->{title} . "\n";
 	}
 

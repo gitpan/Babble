@@ -5,8 +5,7 @@
 ##
 ## Babble is free software; you can redistribute it and/or modify it
 ## under the terms of the GNU General Public License as published by
-## the Free Software Foundation; either version 2 of the License, or
-## (at your option) any later version.
+## the Free Software Foundation; version 2 dated June, 1991.
 ##
 ## Babble is distributed in the hope that it will be useful, but WITHOUT
 ## ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
@@ -58,17 +57,13 @@ into a hash like for HTML::Template. On the other hand, all the
 methods of the different objects passed to the template are available,
 so one can sort the items at templating time.
 
-A C<sort> method is also provided, which can sort an array of
+A C<babble.sort> method is also provided, which can sort an array of
 Babble::Document objects. With this method, one is able to filter the
 items, and sort them afterwards.
 
 =head1 METHODS
 
 =over 4
-
-=cut
-
-=pod
 
 =item output()
 
@@ -84,28 +79,31 @@ the template.
 =cut
 
 sub output {
-	my ($self, $babble, %params) = @_;
+	my ($self, $babble, $params) = @_;
 	my $template = Template->new ({
-		INCLUDE_PATH => [ ".", dirname ($params{-template}) ],
+		INCLUDE_PATH => [ ".", dirname ($params->{-template}) ],
 		EVAL_PERL => 1
 	});
-	my $vars = { collection => $babble->{Collection},
-		     sort => sub {
-			     return sort { $b->date_iso cmp $a->date_iso }
-				     @{$_[0]};
-		     },
-		     last_update => UnixDate ("today", "%Y-%m-%d %H:%M:%S"),
+	my $vars = {
+		collection => $$babble->{Collection},
+		babble => {
+			sort => sub {
+				return sort { $b->date_iso cmp $a->date_iso }
+					@{$_[0]};
+			},
+		},
+		last_update => UnixDate ("today", "%Y-%m-%d %H:%M:%S"),
 	     };
 
-	foreach (keys %{$babble->{Params}}) {
-		$vars->{$_} = $babble->{Params}->{$_};
+	foreach (keys %{$$babble->{Params}}) {
+		$vars->{$_} = $$babble->{Params}->{$_};
 	}
-	foreach (keys %params) {
-		$vars->{$_} = $params{$_};
+	foreach (keys %$params) {
+		$vars->{$_} = $params->{$_};
 	}
 
 	my $output;
-	$template->process ($params{-template}, $vars, \$output) ||
+	$template->process ($params->{-template}, $vars, \$output) ||
 		carp $template->error ();
 	return $output;
 }

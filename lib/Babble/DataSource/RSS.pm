@@ -5,8 +5,7 @@
 ##
 ## Babble is free software; you can redistribute it and/or modify it
 ## under the terms of the GNU General Public License as published by
-## the Free Software Foundation; either version 2 of the License, or
-## (at your option) any later version.
+## the Free Software Foundation; version 2 dated June, 1991.
 ##
 ## Babble is distributed in the hope that it will be useful, but WITHOUT
 ## ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
@@ -64,10 +63,6 @@ parses an arbitary RSS feed.
 
 =over 4
 
-=cut
-
-=pod
-
 =item I<collect>()
 
 This one does the bulk of the job, fetching the feed and parsing it,
@@ -78,10 +73,16 @@ then returning a Babble::Document::Collection object.
 sub collect () {
 	my $self = shift;
 	my $rss = XML::RSS->new ();
-	my $collection;
-	my ($date, $subject, $creator);
+	my ($collection, $feed, $date, $subject, $creator);
 
-	$rss->parse (Babble::Transport->get ($self));
+	$feed = Babble::Transport->get ($self);
+	return undef unless $feed;
+
+	$rss->parse ($feed);
+	if ($@) {
+		carp $@;
+		return undef;
+	}
 
 	if ($rss->channel ('dc')) {
 		$date = $rss->channel ('dc')->{date};
@@ -99,7 +100,8 @@ sub collect () {
 		subject => $subject,
 		id => $rss->channel ('link'),
 		link => $self->{-location},
-		date => ParseDate ($date)
+		date => ParseDate ($date),
+		name => $self->{-id},
 	);
 
 	foreach (@{$rss->{items}}) {
@@ -113,6 +115,7 @@ sub collect () {
 
 		$date = $_->{pubDate} unless $date;
 		$date = $_->{date} unless $date;
+		$date = $collection->{date} unless $date;
 		$author = $self->{-id} unless $author;
 
 		$item = Babble::Document->new (

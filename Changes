@@ -1,5 +1,30 @@
 Changes -- list of user visible changes			-*- outline -*-
 
+* Babble 0.04 -- 2004-03-28
+
+** Caching support
+
+Modified Babble::Transport and added a Babble::cache method to
+Babble::Utils for optional feed and item caching. This is a much more
+efficient way than the datecache processor was. It can also save
+considerable bandwidth.
+
+** Limiting support
+
+Implemented support for limiting the number of elements returned by
+Babble::Document::Collection's search() and sort() methods.
+
+** Improved test suite
+
+The test suite received an additional file: t/pod.t, to test the
+documentation for syntax correctness.
+
+** Improved filtering support
+
+One can now specify a custom comparsion function to be used for
+filtering, searching. This makes one able to limit the items in an
+aggregation to, say, items only a week old or younger.
+
 * Babble 0.03 -- 2004-03-14
 
 ** Some internal restructuring.

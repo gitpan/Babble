@@ -5,8 +5,7 @@
 ##
 ## Babble is free software; you can redistribute it and/or modify it
 ## under the terms of the GNU General Public License as published by
-## the Free Software Foundation; either version 2 of the License, or
-## (at your option) any later version.
+## the Free Software Foundation; version 2 dated June, 1991.
 ##
 ## Babble is distributed in the hope that it will be useful, but WITHOUT
 ## ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
@@ -40,10 +39,6 @@ make it easier to write themes. It shouldn't be used directly, ever.
 =head1 METHODS
 
 =over 4
-
-=cut
-
-=pod
 
 =item _find_template()
 
@@ -88,7 +83,7 @@ sub _merge_params ($$$) {
 
 	foreach (keys %{$np}) {
 		$op->{$_} = $np->{$_}
-			unless $op->{$_} || $babble->{Params}->{$_};
+			unless $op->{$_} || $$babble->{Params}->{$_};
 	}
 }
 

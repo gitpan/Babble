@@ -5,8 +5,7 @@
 ##
 ## Babble is free software; you can redistribute it and/or modify it
 ## under the terms of the GNU General Public License as published by
-## the Free Software Foundation; either version 2 of the License, or
-## (at your option) any later version.
+## the Free Software Foundation; version 2 dated June, 1991.
 ##
 ## Babble is distributed in the hope that it will be useful, but WITHOUT
 ## ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
@@ -18,23 +17,26 @@
 ## Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 
 package Babble::Utils;
+
 use strict;
+use Babble::Cache;
 
 =pod
 
 =head1 NAME
 
-Babble::Utils -- Non-essential Babble extensions and utility methods
+Babble::Utils - Non-essential Babble extensions and utility methods
 
 =head1 SYNOPSIS
 
  use Babble::Utils;
 
- my $babble = Babble->new (-limit_max => 20);
+ my $babble = Babble->new (-cache_db => "cache.db",
+			   -cache_fields => ['id', 'date']);
 
  ...
  $babble->collect_feeds ();
- $babble->force_limits ()
+ $babble->cache ()
  ...
 
 =head1 DESCRIPTION
@@ -50,25 +52,33 @@ Babble::Utils provides the following methods:
 
 =over 4
 
+=item I<cache>(B<%params>)
+
+This function does item caching. It goes over all the items in the
+Babble object, and stores them in a cache, if they're not present. If
+they are already present in there, the keys specified in the
+I<-cache_fields> parameter will be used instead of the items
+respective keys (ie, the items keys will be replaced from values from
+the cache). This can be used to cache the approximate date of items
+which didn't come with a date field by default.
+
+The file used for caching must be specified with the I<-cache_db>
+parameter, either to Babble->new(), or this method.
+
+This is just a wrapper around Babble::Cache, really.
+
 =cut
 
-=pod
+sub Babble::cache (%) {
+	my ($self, %params) = @_;
+	my $cachedb = $params{-cache_db} || $self->{Config}->{-cache_db};
+	my $cache_fields = $params{-cache_fields} ||
+		$self->{Config}->{-cache_fields};
 
-=item I<force_limits>()
-
-Enforce prespecified limits. That is, when one created a babble with a
-I<-limit_max> argument set to a non-zero value, only that many items
-will be displayed in the resulting output, all others are deleted.
-
-=cut
-
-sub Babble::force_limits () {
-	my $self = shift;
-	my $limit = $self->{Config}->{-limit_max};
-
-	return unless $limit;
-
-	delete @{$self->{Items}}[$limit..$#{$self->{Items}}];
+	foreach my $item ($self->all) {
+		Babble::Cache::cache_frob ('Items', $item->{id}, \$item,
+					   $cache_fields);
+	}
 }
 
 =pod
@@ -83,7 +93,7 @@ Bugs should be reported at L<http://bugs.bonehunter.rulez.org/babble>.
 
 =head1 SEE ALSO
 
-Babble, Babble::Processors
+Babble, Babble::Cache
 
 =cut
 

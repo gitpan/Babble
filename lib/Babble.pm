@@ -5,8 +5,7 @@
 ##
 ## Babble is free software; you can redistribute it and/or modify it
 ## under the terms of the GNU General Public License as published by
-## the Free Software Foundation; either version 2 of the License, or
-## (at your option) any later version.
+## the Free Software Foundation; version 2 dated June, 1991.
 ##
 ## Babble is distributed in the hope that it will be useful, but WITHOUT
 ## ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
@@ -28,7 +27,7 @@ use Babble::Processors;
 use Exporter ();
 use vars qw($VERSION @ISA);
 
-$VERSION = '0.03';
+$VERSION = '0.04';
 @ISA = qw(Exporter);
 
 =pod
@@ -74,10 +73,6 @@ C<Babble> has a handful of methods, all of them will be enumerated here.
 
 =over 4
 
-=cut
-
-=pod
-
 =item I<new>()
 
 Creates a new Babble object. Arguments to the I<new> method are listed
@@ -93,25 +88,33 @@ An array of subroutines that Babble will run for each and every item it
 processes. See the PROCESSORS section for more information about these
 matters.
 
+=item -limit_max
+
+The maximum number of items in the collection. This will be used by
+the top-level Babble::Document::Collection object, see the
+documentation of that class for further details.
+
 =back
 
 =cut
 
 sub new {
 	my $type = shift;
+	my %params = @_;
 	my $self = {
 		Sources => [],
-		Collection => Babble::Document::Collection->new (),
+		Collection => Babble::Document::Collection->new
+			(-limit_max => $params{-limit_max}),
 		Param => {},
 		Config => {
 			-processors => [ \&Babble::Processors::default ]
 		}
 	};
-	my %params = @_;
 
 	push (@{$self->{Config}->{-processors}},
 	      @{$params{-processors}}) if (defined $params{-processors});
 	delete $params{-processors};
+	delete $params{-limit_max};
 
 	map { $self->{Config}->{$_} = $params{$_} } keys %params;
 
@@ -165,12 +168,14 @@ sub collect_feeds () {
 	my $self = shift;
 
 	foreach my $source (@{$self->{Sources}}) {
-		my $collection = $source->collect ($self);
+		my $collection = $source->collect (\$self);
+
+		next unless $collection;
 
 		foreach my $item (@{$collection->{documents}}) {
 			next unless defined($item->{'id'});
 
-			map { &$_ ($item, $collection, $source, $self) }
+			map { &$_ (\$item, \$collection, \$source, \$self) }
 				@{$self->{Config}->{-processors}};
 		}
 
@@ -180,7 +185,7 @@ sub collect_feeds () {
 
 =pod
 
-=item sort()
+=item sort([$params])
 
 Sort all the elements in an aggregation by date, and return the sorted
 array of items. Leaves the work to
@@ -188,27 +193,29 @@ Babble::Document::Collection->sort().
 
 =cut
 
-sub sort () {
-	my $self = shift;
+sub sort (;$) {
+	my ($self, $params) = @_;
 
-	return $self->{Collection}->sort ();
+	return $self->{Collection}->sort ($params);
 }
 
 =pod
 
-=item all()
+=item all([$params])
 
 Return all items in an aggregation as an array.
 
 =cut
 
-sub all () {
-	return $_[0]->{Collection}->all ();
+sub all (;$) {
+	my ($self, $params) = @_;
+
+	return $self->{Collection}->all ($params);
 }
 
 =pod
 
-=item I<output>(B<%params>)
+=item output(%params)
 
 Generate the output. This methods recognises two arguments: C<type>,
 which determines what output method will be used for the actual output
@@ -226,33 +233,22 @@ sub output ($;) {
 	my %params = @_;
 	my $type = $params{-type};
 	my $theme = $params{-theme};
-	our $output;
+	my $class;
 
 	$type = "HTML" if (!defined $type);
 
 	if ($theme) {
-		my $req = $theme;
-		$req =~ s,::,\/,g;
-		eval {
-			require "Babble/Theme/$req.pm";
-			$output = "Babble::Theme::$theme"->output (
-				$self, %params
-			);
-		};
-		carp $@ if $@;
+		$class = "Babble::Theme::$theme";
 	} else {
-		my $req = $type;
-		$req =~ s,::,\/,g;
-		eval {
-			require "Babble/Output/$req.pm";
-			$output = "Babble::Output::$type"->output (
-				$self, %params
-			);
-		};
-		carp $@ if $@;
+		$class = "Babble::Output::$type";
 	}
 
-	return $output;
+	eval "use $class";
+	if ($@) {
+		carp $@;
+		return undef;
+	}
+	return $class->output (\$self, \%params);
 }
 
 =pod
@@ -264,8 +260,8 @@ Dispatch everything to Babble::Document::Collection->search().
 =cut
 
 sub search {
-	my $self = shift;
-	return $self->{Collection}->search (@_);
+	my ($self, $filters) = @_;
+	return $self->{Collection}->search ($filters);
 }
 
 =pod
@@ -275,7 +271,8 @@ sub search {
 =head1 PROCESSORS
 
 Processors are subroutines that take four arguments: An I<item>, a
-I<channel>, a I<source>, and a C<Babble> object (the caller).
+I<channel>, a I<source>, and a C<Babble> object (the caller). All of
+them are references.
 
 An I<item> is a Babble::Document object, I<channel> is a
 Babble::Document::Collection object, and I<source> is a

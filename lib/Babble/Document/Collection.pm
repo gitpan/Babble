@@ -5,8 +5,7 @@
 ##
 ## Babble is free software; you can redistribute it and/or modify it
 ## under the terms of the GNU General Public License as published by
-## the Free Software Foundation; either version 2 of the License, or
-## (at your option) any later version.
+## the Free Software Foundation; version 2 dated June, 1991.
 ##
 ## Babble is distributed in the hope that it will be useful, but WITHOUT
 ## ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
@@ -67,20 +66,26 @@ The creation date of this version of the collection.
 
 A brief description of the collection
 
+=item name
+
+The name of the collection. Usually used for subscription lists in the
+templates. This does not come from the feed, as the others. It must be
+specified at object creation time. Defaults to I<author>'s value if
+undefined, or I<title>'s, if I<author> is undefined too.
+
 =back
 
 =head1 METHODS
 
 =over 4
 
-=cut
-
-=pod
-
 =item new()
 
 Creates a new, empty Babble::Document::Collection object. All the
-properties mentioned above are recognised as paramaters.
+properties mentioned above are recognised as paramaters. Aside from
+those, the I<-limit_max> parameter is recognised too. All the methods
+this class provides that give back an array of documents will use the
+value of this parameter to limit the size of the array.
 
 To add documents to the collection, simply push them to
 C<@{$collection-E<gt>{documents}}>.
@@ -88,8 +93,7 @@ C<@{$collection-E<gt>{documents}}>.
 =cut
 
 sub new {
-	my $type = shift;
-	my %params = @_;
+	my ($type, %params) = @_;
 
 	my $self = bless {
 		author => $params{author},
@@ -99,6 +103,8 @@ sub new {
 		link => $params{link},
 		date => $params{date},
 		content => $params{content},
+		name => $params{name} || $params{author} || $params{title},
+		-limit_max => $params{-limit_max},
 
 		documents => []
 	}, $type;
@@ -108,23 +114,28 @@ sub new {
 
 =pod
 
-=item search()
+=item search($filters[, $params])
 
 Given a list of filters (see Babble::Document::search for a
-specification of filters), returns all the documents that match the
-specified criteria. If no matches are found, returns an empty array.
+specification of filters) in an arrayref, returns all the documents
+that match the specified criteria. If no matches are found, returns an
+empty array.
+
+The only recognised parameter is I<-limit_max>.
 
 =cut
 
-sub search {
-	my ($self, @filters) = @_;
+sub search ($;$) {
+	my ($self, $filters, $params) = @_;
 	my @results;
+	my $limit = $params->{-limit_max} || $self->{-limit_max};
 
 	foreach my $doc (@{$self->{documents}}) {
-		my @subres = $doc->search (@filters);
+		my @subres = $doc->search ($filters);
 		push (@results, @subres) if @subres;
 	}
 
+	delete @results[$limit..$#results] if $limit;
 	return @results;
 }
 
@@ -137,7 +148,7 @@ Return all entries (the lowest level entries) as an array.
 =cut
 
 sub all () {
-	my $self = shift;
+	my ($self) = @_;
 	my @all;
 
 	foreach my $doc (@{$self->{documents}}) {
@@ -150,18 +161,24 @@ sub all () {
 
 =pod
 
-=item sort()
+=item sort($params)
 
 Sort all the elements in an aggregation by date, and return the sorted
 array of items.
 
+The only recognised parameter is I<-limit_max>.
+
 =cut
 
-sub sort () {
-	my $self = shift;
+sub sort (;$) {
+	my ($self, $params) = @_;
+	my $limit = $params->{-limit_max} || $self->{-limit_max};
 
-	return sort { $b->date_iso cmp $a->date_iso }
+	my @sorted = sort { $b->date_iso cmp $a->date_iso }
 		$self->all ();
+
+	delete @sorted[$limit..$#sorted] if $limit;
+	return @sorted;
 }
 
 =pod

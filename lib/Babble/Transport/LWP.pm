@@ -5,8 +5,7 @@
 ##
 ## Babble is free software; you can redistribute it and/or modify it
 ## under the terms of the GNU General Public License as published by
-## the Free Software Foundation; either version 2 of the License, or
-## (at your option) any later version.
+## the Free Software Foundation; version 2 dated June, 1991.
 ##
 ## Babble is distributed in the hope that it will be useful, but WITHOUT
 ## ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
@@ -21,6 +20,8 @@ package Babble::Transport::LWP;
 
 use strict;
 use Carp;
+use HTTP::Headers;
+use HTTP::Request;
 use LWP::UserAgent;
 
 =pod
@@ -38,10 +39,6 @@ fetching documents via any protocol LWP supports.
 
 =over 4
 
-=cut
-
-=pod
-
 =item get
 
 Returns the contents of the given location as a string scalar, or
@@ -53,15 +50,21 @@ LWP::UserAgent's new() method.
 sub get {
 	my ($self, $params) = @_;
 
-	$params->{-lwp}->{agent} = "Babble/" . $Babble::VERSION
+	$params->{-lwp}->{agent} = "Babble/" . $Babble::VERSION .
+		" (http://bonehunter.rulez.org/Babble.phtml)"
 		unless defined $params->{-lwp}->{agent};
 
+	my $request = HTTP::Request->new
+		("GET", $params->{-location},
+		 HTTP::Headers->new (%{$params->{-headers}}));
 	my $ua = LWP::UserAgent->new (%{$params->{-lwp}});
-	my $res = $ua->get ($params->{-location});
+	my $res = $ua->request ($request);
 
-	return $res->content if ($res->is_success);
+	return $res->content if ($res->is_success || $res->code == 304);
 
-	carp $res->status_line;
+	carp $res->status_line . " (" . $params->{-location} . ")";
+
+	return undef;
 }
 
 =pod

@@ -5,8 +5,7 @@
 ##
 ## Babble is free software; you can redistribute it and/or modify it
 ## under the terms of the GNU General Public License as published by
-## the Free Software Foundation; either version 2 of the License, or
-## (at your option) any later version.
+## the Free Software Foundation; version 2 dated June, 1991.
 ##
 ## Babble is distributed in the hope that it will be useful, but WITHOUT
 ## ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
@@ -57,10 +56,6 @@ available items, using C<HTML::Template>.
 
 =over 4
 
-=cut
-
-=pod
-
 =item _split_items()
 
 Split the retrieved feed items into an array of dates. So items
@@ -83,7 +78,7 @@ sub _split_items {
 	my $titem = {};
 	my $dates = [];
 
-	foreach ($babble->sort ()) {
+	foreach ($$babble->sort ()) {
 		if (defined ($titem->{date})) {
 			if ($titem->{date} ne $_->date_date) {
 				push (@{$dates}, $titem);
@@ -101,7 +96,7 @@ sub _split_items {
 
 =pod
 
-=item I<output>(B<$babble>, B<%params>)
+=item I<output>(B<$babble>, B<$params>)
 
 This output method recognises only the I<template> argument, which
 will be passed to C<HTML::Template-E<gt>new()>. All other arguments will
@@ -117,18 +112,16 @@ example templates for details.
 =cut
 
 sub output {
-	my $self = shift;
-	my $babble = shift;
-	my %params = @_;
+	my ($self, $babble, $params) = @_;
 
 	my $tmpl = HTML::Template->new
-		(filename => $params{-template},
+		(filename => $params->{-template},
 		 die_on_bad_params => 0, global_vars => 1,
-		 path => dirname ($params{-template}));
-	$tmpl->param (documents => $babble->{Collection}->{documents});
-	$tmpl->param (items => $self->_split_items ($babble));
-	$tmpl->param ($babble->{Params});
-	$tmpl->param (\%params);
+		 path => dirname ($params->{-template}));
+	$tmpl->param (documents => $$babble->{Collection}->{documents});
+	$tmpl->param (items => $self->_split_items ($$babble));
+	$tmpl->param ($$babble->{Params});
+	$tmpl->param ($params);
 	$tmpl->param (last_update => UnixDate ("today", "%Y-%m-%d %H:%M:%S"));
 
 	return $tmpl->output;
