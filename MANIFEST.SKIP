@@ -1,0 +1,12 @@
+^_(build|misc)
+^Build$
+^blib
+~$
+^\{arch\}
+\.arch-ids
+^babble\.(cfg|html)$
+\.bak$
+\.tar.gz(.sig)?$
+^,,
+^.#
+^\+\+

@@ -1,0 +1,48 @@
+<TMPL_LOOP NAME=items>
+<TMPL_LOOP NAME=items>
+
+<h2 id="title">
+<TMPL_UNLESS template_knob_no_content_links>
+  <a href="<TMPL_VAR ESCAPE=HTML id>">
+</TMPL_UNLESS>
+<TMPL_IF NAME=title>
+  <TMPL_VAR title>
+<TMPL_ELSE>
+  <TMPL_VAR author>
+</TMPL_IF>
+<TMPL_UNLESS template_knob_no_content_links>
+  </a>
+</TMPL_UNLESS>
+</h2>
+
+<div id="postinfo">
+<TMPL_IF creator>
+  Posted
+</TMPL_IF>
+
+<TMPL_UNLESS template_knob_no_date>
+  <TMPL_IF date_text>
+    <TMPL_UNLESS creator>Posted</TMPL_UNLESS> on <TMPL_VAR date_text></TMPL_IF>
+</TMPL_UNLESS>
+
+<TMPL_IF author>
+  by
+  <TMPL_UNLESS template_knob_no_content_links>
+    <a href="<TMPL_VAR ESCAPE=HTML master>">
+  </TMPL_UNLESS>
+  <TMPL_VAR author>
+  <TMPL_UNLESS template_knob_no_content_links>
+    </a>
+  </TMPL_UNLESS>
+</TMPL_IF>
+</div>
+
+<div class="entry">
+<TMPL_VAR content>
+</div>
+</TMPL_LOOP>
+</TMPL_LOOP>
+
+<!--
+arch-tag: 2b548603-dfed-4bd5-98fa-149d7688a3bb
+-->

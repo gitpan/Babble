@@ -1,0 +1,50 @@
+--- #YAML:1.0
+name: Babble
+version: 0.01
+author:
+  - Gergely Nagy <algernon@bonehunter.rulez.org>
+abstract: RSS Feed Aggregator and Blog engine
+license: gpl
+requires:
+  Date::Manip: ''
+  perl: 5.6.0
+recommends:
+  Data::Dumper: ''
+  HTML::Template: ''
+  LWP::UserAgent: ''
+  XML::RSS: ''
+provides:
+  Babble:
+    file: lib/Babble.pm
+    version: 0.01
+  Babble::DataSource:
+    file: lib/Babble/DataSource.pm
+  Babble::DataSource::FlatFile:
+    file: lib/Babble/DataSource/FlatFile.pm
+  Babble::DataSource::HTTP:
+    file: lib/Babble/DataSource/HTTP.pm
+  Babble::Document:
+    file: lib/Babble/Document.pm
+  Babble::Document::Collection:
+    file: lib/Babble/Document/Collection.pm
+  Babble::Output:
+    file: lib/Babble/Output.pm
+  Babble::Output::HTML:
+    file: lib/Babble/Output/HTML.pm
+  Babble::Output::RSS:
+    file: lib/Babble/Output/RSS.pm
+  Babble::Processors:
+    file: lib/Babble/Processors.pm
+  Babble::Processors::Extra:
+    file: lib/Babble/Processors/Extra.pm
+  Babble::Theme:
+    file: lib/Babble/Theme.pm
+  Babble::Theme::advogato:
+    file: lib/Babble/Theme/advogato.pm
+  Babble::Theme::planet:
+    file: lib/Babble/Theme/planet.pm
+  Babble::Theme::sidebar:
+    file: lib/Babble/Theme/sidebar.pm
+  Babble::Utils:
+    file: lib/Babble/Utils.pm
+generated_by: Module::Build version 0.23
