@@ -5,6 +5,12 @@
 </head>
 <body>
 
+[% IF template_conf_max_days %]
+[% tmp_collection = babble.sort (babble.newer_than (template_conf_max_days)) %]
+[% ELSE %]
+[% tmp_collection = collection.sort %]
+[% END %]
+
 [% PROCESS "banner.html.tmpl" %]
 [% PROCESS "sidebar.html.tmpl" %]
 [% PROCESS "main_content.html.tmpl" %]
@@ -12,6 +18,6 @@
 </body>
 </html>
 
-<!--
+[%#
 arch-tag: d46ea006-2759-417a-8d70-b7a25040d09a
--->
+%]

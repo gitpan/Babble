@@ -26,15 +26,16 @@ use Text::Iconv;
 use Babble;
 use Babble::Cache;
 use Babble::Utils;
-use Babble::DataSource::RSS;
+use Babble::Processors::Extra;
 
+my $cfgfile = "-";
 my $verbose = 0;
 my $man = 0;
 my $help = 0;
 my $version = 0;
 GetOptions (
 	'verbose|v+' => \$verbose,
-	'debug|d' => sub { $verbose = 2; },
+	'debug|d' => sub { $verbose = 3; },
 	'help|?' => \$help,
 	'version|V' => \$version,
 	'man' => \$man
@@ -48,49 +49,78 @@ if ($version) {
 
 $| = 1;
 
-print "Reading configuration from " . $ARGV[0] . " ...\n"
+$cfgfile = $ARGV[0] if $ARGV[0];
+print "Reading configuration from " . $cfgfile . " ...\n"
 	if ($verbose >= 2);
 
-my $cfg = Config::IniFiles->new (-file => $ARGV[0]);
+my $cfg;
+if ($cfgfile eq '-') {
+	$cfg = Config::IniFiles->new (-file => \*STDIN);
+} else {
+	$cfg = Config::IniFiles->new (-file => $cfgfile);
+}
 my @feeds = ();
 my @themes = ();
+my @cbs = ();
 my %babble_config = ();
 
 foreach my $param ($cfg->Parameters ('Babble')) {
-	$babble_config{$param} = $cfg->val ('Babble', $param);
+	my $key = $param;
+	my $val = $cfg->val ('Babble', $param);
+	if ($param =~ /^\&(.*)/) {
+		$key = $1;
+		$val = eval "$val";
+	}
+	$babble_config{$key} = $val;
 }
 
+push (@cbs, \&cb_collect_start) if ($verbose >= 2);
+
 print "Loading cache ...\n" if ($verbose >= 2);
+$Babble::Cache::cache_format = $babble_config{cache_format}
+	if $babble_config{cache_format};
 Babble::Cache::cache_load ($babble_config{cache_db});
 
 print "Recording sources ...\n" if ($verbose >= 2);
 
-foreach my $feed ($cfg->Sections) {
-	next if ($feed =~ /^(theme|babble)/i);
+foreach my $feed (grep (!/^(theme:|babble$)/i, $cfg->Sections)) {
+	my %feed_params = (
+		-location => $feed,
+		-cache_parsed => $babble_config{cache_parsed},
+		-preprocessors => [ \&utficate, \&htmlfix ],
+		-id => $cfg->val ($feed, 'name') || $feed,
+	);
 
-	if ($cfg->val ($feed, 'type') &&
-	    $cfg->val ($feed, 'type') =~ /^opml$/i ) {
-		eval q{use Babble::DataSource::OPML;};
+	my $type = $cfg->val ($feed, 'type') || "RSS";
+
+	print ' Recording source `' . $feed . '\' (type ' . $type . ") ...\n"
+		if ($verbose >= 3);
+
+	eval "use Babble::DataSource::$type;";
+	if ($@) {
+		$type = uc ($type);
+		eval "use Babble::DataSource::$type;";
 		die $@ if $@;
-
-		push (@feeds, Babble::DataSource::OPML->new (
-			-location => $feed,
-			-cache_db => $babble_config{cache_db},
-			-preprocessors => [ \&utficate, \&htmlfix ],
-			-id => $cfg->val ($feed, 'name')));
-		next;
 	}
 
-	push (@feeds, Babble::DataSource::RSS->new (
-		-location => $feed,
-		-cache_db => $babble_config{cache_db},
-		-preprocessors => [ \&utficate, \&htmlfix ],
-		-id => $cfg->val ($feed, 'name')));
+	foreach my $param (grep (!/^(name|type)/, $cfg->Parameters ($feed))) {
+		my $key = '-' . $param;
+		my $val = $cfg->val ($feed, $param);
+		if ($param =~ /^\&(.*)/) {
+			$key = '-' . $1;
+			$val = eval "$val";
+		}
+		$feed_params{$key} = $val;
+	}
+
+	push (@feeds, "Babble::DataSource::$type"->new (%feed_params));
 }
 
 my $babble = Babble->new (
 	-cache_db => $babble_config{cache_db},
 	-limit_max => $babble_config{limit},
+	-callbacks_collect_start => \@cbs,
+	-processors => [ \&Babble::Processors::Extra::creator_map ],
 );
 
 $babble->add_params (%babble_config);
@@ -109,7 +139,13 @@ $babble->cache (
 foreach my $theme (split (/ /, $babble_config{themes})) {
 	my %theme_config = ();
 	foreach my $param ($cfg->Parameters ("theme:" . $theme)) {
-		$theme_config{$param} = $cfg->val ("theme:" . $theme, $param);
+		my $key = $param;
+		my $val = $cfg->val ('theme:' . $theme, $param);
+		if ($param =~ /^\&(.*)/) {
+			$key = $param;
+			$val = eval "$val";
+		}
+		$theme_config{$key} = $val;
 	}
 
 	if ($theme_config{theme}) {
@@ -153,6 +189,13 @@ sub htmlfix {
 	$$text =~ s/\&((?!\w+;))/\&amp;$1/g;
 }
 
+sub cb_collect_start {
+	my $source = shift;
+
+	print ' Collecting: `' . $$source->{-id} . '\' from ' .
+		$$source->{-location} . "\n";
+}
+
 END {
 	print "Saving cache ...\n" if ($verbose >= 2);
 	Babble::Cache::cache_dump ($babble_config{cache_db});
@@ -166,7 +209,7 @@ babble - Simplistic Babble frontend
 
 =head1 SYNOPSIS
 
-babble [options] configfile
+babble [options] [configfile]
 
 =head1 DESCRIPTION
 

@@ -71,6 +71,19 @@ Link to the homepage of the Babble.
 
 =back
 
+=head1 TEMPLATE OPTIONS
+
+=over 4
+
+=item template_conf_max_days
+
+Controls the maximum age of items. Entries older than the value
+specified here will not be displayed.
+
+This only affects the I<rss20> output format.
+
+=back
+
 =head1 METHODS
 
 =over 4

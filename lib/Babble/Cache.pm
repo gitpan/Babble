@@ -20,12 +20,12 @@ package Babble::Cache;
 
 use strict;
 use Carp;
-use Data::Dumper;
 
-use vars qw($cachedb);
+use vars qw($cachedb $cache_format);
 
 BEGIN {
 	our $cachedb = {};
+	our $cache_format = "Dumper";
 }
 
 =pod
@@ -48,16 +48,23 @@ Babble::Cache provides the following methods:
 
 =item cache_load($fn)
 
-Loads the file specified, if it exists. The cache database must be
-valid perl code, and use only one variable: I<$cachedb>, which should
-be a hashref.
+Loads the file specified, if exists. The format of the database can
+vary. By default, it is valid perl code, dumped out with Data::Dumper,
+but it can be anything that the Babble::Cache:: sub-modules support.
 
 =cut
 
 sub cache_load ($) {
 	my $fn = shift;
 
-	require $fn if $fn && -e "$fn";
+	return unless ($fn && -e $fn);
+
+	eval "use Babble::Cache::$cache_format";
+	if ($@) {
+		carp $@;
+		return;
+	}
+	"Babble::Cache::$cache_format"->cache_load ($fn, \$cachedb);
 }
 
 =pod
@@ -146,18 +153,52 @@ sub cache_dump ($) {
 
 	return unless $fn;
 
-	$Data::Dumper::Terse = 1;
-
-	unless (open (OUTF, '>' . $fn)) {
-		carp 'Error dumping cache to `' . $fn . '\': ' . $1;
+	eval "use Babble::Cache::$cache_format";
+	if ($@) {
+		carp $@;
 		return;
 	}
-	print OUTF "# Automatically generated file. Edit carefully!\n";
-	print OUTF '$cachedb = ' . Dumper ($cachedb) . ";\n1;\n";
-	close OUTF;
+	"Babble::Cache::$cache_format"->cache_dump ($fn, \$cachedb);
 }
 
 =pod
+
+=back
+
+=head1 VARIABLES
+
+=over 4
+
+=item $Babble::Cache::cache_format
+
+Determines the format of the cache. Values can be I<Dumper>
+(Data::Dumper will be used to dump the database, and require to
+restore it), or I<Storable> (Storable will be used to dump and
+retrieve the data).
+
+Defaults to I<Dumper>, because that is easier to edit by hand, if
+needed.
+
+=back
+
+=head1 STORAGE FORMATS
+
+Storage formats are implemented by Babble::Cache sub-modules. A
+storage module needs to have two methods (both must be callble in an
+OO fashion):
+
+=over 4
+
+=item cache_load
+
+Takes two arguments: the filename to read from (already verified that
+it exists), and a reference to a hashref, where the loaded data must
+be stored.
+
+=item cache_dump
+
+Also takes two arguments: the filename to dump the cache to, and a
+reference to a hashref, containing the data to store.
 
 =back
 
@@ -169,7 +210,7 @@ Bugs should be reported at L<http://bugs.bonehunter.rulez.org/babble>.
 
 =head1 SEE ALSO
 
-Babble
+Babble, Babble::Cache::Dumper, Babble::Cache::Storable
 
 =cut
 

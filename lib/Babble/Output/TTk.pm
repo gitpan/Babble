@@ -89,7 +89,20 @@ sub output {
 		babble => {
 			sort => sub {
 				return sort { $b->date_iso cmp $a->date_iso }
-					@{$_[0]};
+					@_;
+			},
+			newer_than => sub {
+				my ($age) = @_;
+				return $$babble->search ([{
+					field => 'date',
+					pattern => ParseDate (
+						DateCalc ('today', '-' . $age .
+								  'days')),
+					cmp => sub {
+						my ($a, $b) = @_;
+						return (Date_Cmp ($a, $b) > 0);
+					},
+				}]);
 			},
 		},
 		last_update => UnixDate ("today", "%Y-%m-%d %H:%M:%S"),

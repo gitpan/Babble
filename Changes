@@ -1,5 +1,55 @@
 Changes -- list of user visible changes			-*- outline -*-
 
+* Babble 0.05 -- 2004-04-03
+
+** Improved limiting support
+
+A different kind of limiting support was made accessible to the
+Template Toolkit based templates: limiting by age. Items older than
+a specified value will not be handled by the template.
+
+** Improved caching
+
+Babble is now able to cache parsed data (disabled by default,
+though), which results in significantly faster processing, but
+increases memory usage too.
+
+Also, the Babble::Cache module can store the cache contents in
+different formats now. The single new format is Storable, which is
+not human readable, but much faster than Data::Dumper.
+
+** Callback support while collecting feeds
+
+It is now possible to run callback routines whenever a source is
+about to collected and when collection ended. This gives one a way to
+print status messages or the like.
+
+** New, DBI based datasource
+
+A new datasource module, Babble::DataSource::DBI was added to the
+distribution. It can be used to collect feed data from any kind of
+database DBI might have support for.
+
+** New, Mail based datasource
+
+A new datasource module, Babble::DataSource::Mail was added to the
+distribution. It can be used to collect feed data from, say,
+mailboxes. One can use this for setting up a system where mail
+intended for blogging is saved in a separate mailbox, and this module
+is used for processing it.
+
+** Improved test suite
+
+Many new tests were added to the test suite, to achieve even higher
+codepath coverage (still not enough, but we're getting there).
+
+** Example bin/babble frontend enhancements
+
+The example `bin/babble' frontend was extended to understand
+parameters that should be eval-ed before usage (these are prefixed
+with a `&'), and to be able to read the configuration file from its
+standard input.
+
 * Babble 0.04 -- 2004-03-28
 
 ** Caching support

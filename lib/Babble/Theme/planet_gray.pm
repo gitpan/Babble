@@ -135,6 +135,17 @@ date. This can be turned off with this knob.
 
 =back
 
+=head1 TEMPLATE OPTIONS
+
+=over 4
+
+=item template_conf_max_days
+
+Controls the maximum age of items. Entries older than the value
+specified here will not be displayed.
+
+=back
+
 =head1 METHODS
 
 =over 4

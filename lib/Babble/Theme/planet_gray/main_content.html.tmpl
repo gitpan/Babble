@@ -1,7 +1,7 @@
 [%- UNLESS template_knob_no_date_head -%][%- myhead = "1970-01-01" -%][%- END -%]
 
 <div id="body">
-[%- FOREACH item = collection.sort -%]
+[%- FOREACH item = tmp_collection -%]
   [%- UNLESS template_knob_no_date_head -%]
     [%- IF myhead != item.date_date -%][%- myhead = item.date_date -%]
     <h1 class="date-head">
@@ -41,6 +41,6 @@
 [% END %]
 </div>
 
-<!--
+[%#
 arch-tag: be16f748-3420-4f35-82e3-1c6c66c37dbe
--->
+%]

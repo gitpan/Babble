@@ -4,6 +4,8 @@ use Cwd;
 use Test::More tests => 12;
 use lib qw(t/dummy);
 
+our $TZ="GMT";
+
 # First, check if we can create a Babble object
 use_ok ("Babble");
 
@@ -18,7 +20,7 @@ use_ok ("Babble::DataSource::FlatFile");
 
 $object->add_sources (
 	Babble::DataSource::FlatFile->new (
-		-data_dir => cwd() . "/t/data/",
+		-location => cwd() . "/t/data/",
 		-permalink_base => "."
 	),
 );

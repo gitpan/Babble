@@ -47,7 +47,7 @@ Last updated: [% last_update %]
 <h2>Datebar</h2>
 <ul>
 [%- myhead = "1970-01-01" -%]
-[% FOREACH item = collection.sort- %]
+[% FOREACH item = tmp_collection -%]
   [%- IF myhead != item.date_date -%]
     [%- myhead = item.date_date -%]
     <li> <a href="#[% item.date_date %]">[% item.date_date %]</a> </li>
@@ -58,6 +58,6 @@ Last updated: [% last_update %]
 
 </div>
 
-<!--
+[%#
 arch-tag: 50fa453b-ffe5-4802-ae6a-ba09c9c477dc
--->
+%]

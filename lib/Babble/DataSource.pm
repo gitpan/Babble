@@ -59,6 +59,9 @@ sub new {
 	my %params = @_;
 	my $self = \%params;
 
+	croak "$type->new() called without -location argument"
+		unless $self->{-location};
+
 	bless $self, $type;
 }
 

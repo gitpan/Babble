@@ -30,14 +30,17 @@ Babble::Utils - Non-essential Babble extensions and utility methods
 =head1 SYNOPSIS
 
  use Babble::Utils;
+ use Babble::Cache;
 
- my $babble = Babble->new (-cache_db => "cache.db",
-			   -cache_fields => ['id', 'date']);
+ Babble::Cache::cache_load ('cache.db');
+ my $babble = Babble->new (-cache_fields => ['id', 'date']);
 
  ...
  $babble->collect_feeds ();
  $babble->cache ()
  ...
+
+ Babble::Cache::cache_dump ('cache.db');
 
 =head1 DESCRIPTION
 
@@ -62,16 +65,12 @@ respective keys (ie, the items keys will be replaced from values from
 the cache). This can be used to cache the approximate date of items
 which didn't come with a date field by default.
 
-The file used for caching must be specified with the I<-cache_db>
-parameter, either to Babble->new(), or this method.
-
 This is just a wrapper around Babble::Cache, really.
 
 =cut
 
 sub Babble::cache (%) {
 	my ($self, %params) = @_;
-	my $cachedb = $params{-cache_db} || $self->{Config}->{-cache_db};
 	my $cache_fields = $params{-cache_fields} ||
 		$self->{Config}->{-cache_fields};
 

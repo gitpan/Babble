@@ -27,7 +27,7 @@ use Babble::Processors;
 use Exporter ();
 use vars qw($VERSION @ISA);
 
-$VERSION = '0.04';
+$VERSION = '0.05';
 @ISA = qw(Exporter);
 
 =pod
@@ -94,6 +94,22 @@ The maximum number of items in the collection. This will be used by
 the top-level Babble::Document::Collection object, see the
 documentation of that class for further details.
 
+=item -callbacks_collect_start
+
+An array of subroutines that Babble will run for each and every
+datasource when collecting feeds. The routine must take only one
+argument: a reference to a Babble::DataSource object.
+
+Calling happens before the collect itself starts.
+
+=item -callbacks_collect_end
+
+An array of subroutines that Babble will run for each and every
+datasource when collecting feeds. The routine must take only one
+argument: a reference to a Babble::DataSource object.
+
+Calling happens after the collect itself ended.
+
 =back
 
 =cut
@@ -107,13 +123,18 @@ sub new {
 			(-limit_max => $params{-limit_max}),
 		Param => {},
 		Config => {
-			-processors => [ \&Babble::Processors::default ]
+			-processors => [ \&Babble::Processors::default ],
+			-callbacks_collect_start => [],
+			-callbacks_collect_end => [],
 		}
 	};
 
-	push (@{$self->{Config}->{-processors}},
-	      @{$params{-processors}}) if (defined $params{-processors});
-	delete $params{-processors};
+	foreach (qw(-processors -callbacks_collect_start
+		    -callbacks_collect_stop)) {
+		push (@{$self->{Config}->{$_}}, @{$params{$_}})
+			      if (defined $params{$_});
+		delete $params{$_};
+	}
 	delete $params{-limit_max};
 
 	map { $self->{Config}->{$_} = $params{$_} } keys %params;
@@ -157,8 +178,10 @@ sub add_sources (@) {
 
 =item I<collect_feeds>()
 
-Retrieve and process the feeds that were added to the Babble. All processor
-routines will be run by this very method.
+Retrieve and process the feeds that were added to the Babble. All
+processor routines will be run by this very method. Also, if there
+were any collect callbacks specified when the object was created, they
+will be run too.
 
 Please note that this must be called before the I<output> method!
 
@@ -168,6 +191,9 @@ sub collect_feeds () {
 	my $self = shift;
 
 	foreach my $source (@{$self->{Sources}}) {
+		foreach (@{$self->{Config}->{-callbacks_collect_start}}) {
+			&$_ (\$source);
+		}
 		my $collection = $source->collect (\$self);
 
 		next unless $collection;
@@ -180,6 +206,10 @@ sub collect_feeds () {
 		}
 
 		push (@{$self->{Collection}->{documents}}, $collection);
+
+		foreach (@{$self->{Config}->{-callbacks_collect_stop}}) {
+			&$_ (\$source);
+		}
 	}
 }
 

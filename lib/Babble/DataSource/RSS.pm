@@ -22,6 +22,7 @@ use strict;
 use Carp;
 
 use Babble;
+use Babble::Cache;
 use Babble::DataSource;
 use Babble::Document;
 use Babble::Document::Collection;
@@ -68,6 +69,10 @@ parses an arbitary RSS feed.
 This one does the bulk of the job, fetching the feed and parsing it,
 then returning a Babble::Document::Collection object.
 
+If a I<-cache_parsed> option was set when creating the object, the
+parsed data will be stored in the cache. This can speed up processing
+considreably, yet it needs much more memory too.
+
 =cut
 
 sub collect () {
@@ -77,6 +82,17 @@ sub collect () {
 
 	$feed = Babble::Transport->get ($self);
 	return undef unless $feed;
+
+	if ($self->{-cache_parsed} &&
+	    Date_Cmp (Babble::Cache::cache_get ('Feeds', $self->{-location},
+						'time'),
+		      Babble::Cache::cache_get ('Parsed', $self->{-location},
+						'time')) < 0) {
+		# We should use the cache...
+		return Babble::Cache::cache_get ('Parsed',
+						 $self->{-location},
+						 'data');
+	}
 
 	$rss->parse ($feed);
 	if ($@) {
@@ -129,6 +145,13 @@ sub collect () {
 
 		push (@{$collection->{documents}}, $item);
 	}
+
+	Babble::Cache::cache_update (
+		'Parsed', $self->{-location},
+		{
+			time => UnixDate ("now", "%a, %d %b %Y %H:%M:%S GMT"),
+			data => $collection
+		}, 'data') if $self->{-cache_parsed};
 
 	return $collection;
 }
