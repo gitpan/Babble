@@ -119,7 +119,7 @@ sub output {
 			     }
 		      );
 
-	foreach my $item ($babble->all ()) {
+	foreach my $item ($babble->sort ()) {
 		$rss->add_item (
 			title => "<![CDATA[" . $item->{title} . "]]>",
 			link => $item->{id},

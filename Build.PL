@@ -12,14 +12,17 @@ Module::Build->new (
 		LWP::UserAgent => 0,
 		XML::RSS => 0,
 		Data::Dumper => 0,
-		Template => 0
+		Template => 0,
+		Config::IniFiles => 0,
+		XML::OPML => 0
 	  },
 	PL_files => {
 		'tools/install-theme.PL' => [
-			'planet', 'advogato', 'sidebar', 'planet_ttk'
+			'planet', 'advogato', 'sidebar', 'planet_gray',
+			'XML'
 		]
 	},
-	scripts => [ 'babble.pl' ],
+	scripts => [ 'babble' ],
 	dist_author => 'Gergely Nagy <algernon@bonehunter.rulez.org>',
 	create_readme => 1,
 	dist_version_from => "lib/Babble.pm",

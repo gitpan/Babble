@@ -1,4 +1,4 @@
-## Babble/DataSource/HTTP.pm
+## Babble/DataSource/RSS.pm
 ## Copyright (C) 2004 Gergely Nagy <algernon@bonehunter.rulez.org>
 ##
 ## This file is part of Babble.
@@ -17,7 +17,7 @@
 ## along with this program; if not, write to the Free Software
 ## Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 
-package Babble::DataSource::HTTP;
+package Babble::DataSource::RSS;
 
 use strict;
 use Carp;
@@ -26,8 +26,8 @@ use Babble;
 use Babble::DataSource;
 use Babble::Document;
 use Babble::Document::Collection;
+use Babble::Transport;
 
-use LWP::UserAgent;
 use XML::RSS;
 use Date::Manip;
 
@@ -39,56 +39,32 @@ use vars qw(@ISA);
 
 =head1 NAME
 
-Babble::DataSource::HTTP - HTTP source fetcher for Babble
+Babble::DataSource::RSS - RSS source fetcher for Babble
 
 =head1 SYNOPSIS
 
  use Babble;
- use Babble::DataSource::HTTP;
+ use Babble::DataSource::RSS;
 
  my $babble = Babble->new ();
  $babble->add_sources (
-	Babble::DataSource::HTTP->new (
+	Babble::DataSource::RSS->new (
 		-id => "Gergely Nagy",
-		-url => "http://midgard.debian.net/~algernon/blog/index.xml"
+		-location => "http://midgard.debian.net/~algernon/blog/index.xml"
 	)
  );
  ...
 
 =head1 DESCRIPTION
 
-Babble::DataSource::HTTP implements a Babble data source class that
-reaches out onto the internet to fetch RSS feeds.
+Babble::DataSource::RSS implements a Babble data source class that
+parses an arbitary RSS feed.
 
 =head1 METHODS
 
 =over 4
 
 =cut
-
-=pod
-
-=item I<new>(B<%params>)
-
-This method creates a new object. The recognised arguments include
-I<-url>, which is a mandatory argument, and I<-user_agent>, which can
-be used to change what User-Agent Babble::DataSource::HTTP will
-identify itself as.
-
-=cut
-
-sub new {
-	my $type = shift;
-	my $class = ref ($type) || $type;
-	my $self = $class->SUPER::new (@_);
-
-	$self->{-user_agent} = "Babble/" . $Babble::VERSION
-		unless $self->{-user_agent};
-
-	croak "$type->new() called without -url argument" unless $self->{-url};
-
-	bless $self, $type;
-}
 
 =pod
 
@@ -102,12 +78,10 @@ then returning a Babble::Document::Collection object.
 sub collect () {
 	my $self = shift;
 	my $rss = XML::RSS->new ();
-	my $ua = LWP::UserAgent->new (agent =>
-				      $self->{-user_agent});
 	my $collection;
 	my ($date, $subject, $creator);
 
-	$rss->parse ($ua->get ($self->{-url})->content);
+	$rss->parse (Babble::Transport->get ($self));
 
 	if ($rss->channel ('dc')) {
 		$date = $rss->channel ('dc')->{date};
@@ -116,6 +90,7 @@ sub collect () {
 		$creator = $rss->channel ('dc')->{creator};
 	}
 	$date = "today" unless $date;
+	$creator = $self->{-id} unless $creator;
 
 	$collection = Babble::Document::Collection->new (
 		author => $creator,
@@ -123,7 +98,7 @@ sub collect () {
 		content => $rss->channel ('description'),
 		subject => $subject,
 		id => $rss->channel ('link'),
-		link => $self->{-url},
+		link => $self->{-location},
 		date => ParseDate ($date)
 	);
 
@@ -138,6 +113,7 @@ sub collect () {
 
 		$date = $_->{pubDate} unless $date;
 		$date = $_->{date} unless $date;
+		$author = $self->{-id} unless $author;
 
 		$item = Babble::Document->new (
 			author => $author,
@@ -167,7 +143,7 @@ Bugs should be reported at L<http://bugs.bonehunter.rulez.org/babble>.
 =head1 SEE ALSO
 
 Babble::Document, Babble::Document::Collection,
-Babble::DataSource
+Babble::DataSource, Babble::Transport
 
 =cut
 

@@ -6,6 +6,10 @@ body {
      background-color: #ffffff;
 }
 
+#body {
+      margin-right: 180px;
+}
+
 #banner {
 	color: #000;
 	background-color: #eee;
@@ -37,8 +41,11 @@ body {
 	   border-top: 1px solid #ccc;
 	   background-color: #eee;
 	   border-bottom: 1px solid #ccc;
+	   border-right: 1px solid #ccc;
 	   padding: 1px 5px 1px 5px;
 	   margin: 20px 0px 0px 0px;
+	   margin-right: -180px;
+	   padding-right: 100px;
 }
 
 #item-meta, #item-meta a {
@@ -94,9 +101,9 @@ body {
 	 font-family: verdana, helvetica, arial, sans-serif;
 	 letter-spacing: 0.15em;
 	 text-transform: uppercase;
-	 color: #666;
+	 color: #4444bb;
 	 font-size: 11px;
-	 font-weight: normal;
+	 font-weight: bold;
 	 padding: 2px 0px 2px 4px;
 	 margin: 15px 0px 5px 10px;
 	 border-top: 1px solid #ccc;
@@ -138,6 +145,18 @@ body {
 	 font-size: 10px;
 	 padding-left: 20px;
 	 padding-right: 5px;
+}
+
+a:visited {
+	  color: blue;
+}
+
+#item-content a {
+  text-decoration: none;
+}
+
+#item-content a:hover {
+	      text-decoration: underline;
 }
 
 /*

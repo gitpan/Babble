@@ -1,5 +1,6 @@
 [%- UNLESS template_knob_no_date_head -%][%- myhead = "1970-01-01" -%][%- END -%]
 
+<div id="body">
 [%- FOREACH item = collection.sort -%]
   [%- UNLESS template_knob_no_date_head -%]
     [%- IF myhead != item.date_date -%][%- myhead = item.date_date -%]
@@ -21,7 +22,7 @@
       [%- UNLESS template_knob_no_content_links -%]</a>[%- END -%]
       <span class="separator">|</span>
       [%- END -%]
-      [% UNLESS template_knob_no_date %][% item.date_text %][% END %]
+      [% UNLESS template_knob_no_date %]&nbsp;&nbsp;[% item.date_text %][% END %]
     </div>
     [%- END %]
 
@@ -38,6 +39,7 @@
     </div>
   </div>
 [% END %]
+</div>
 
 <!--
 arch-tag: be16f748-3420-4f35-82e3-1c6c66c37dbe

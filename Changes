@@ -1,5 +1,31 @@
 Changes -- list of user visible changes			-*- outline -*-
 
+* Babble 0.03 -- 2004-03-14
+
+** Some internal restructuring.
+
+Implemented a Babble::Transport module, for transparent location
+access (currently only used by Babble::DataSource::RSS and
+Babble::DataSource::OPML).
+
+** Theme updates and modifications.
+
+The FOAF and OPML formats from planet_ttk were moved to a separate
+XML theme, planet_ttk got renamed to planet_grey and received some
+layout updates.
+
+** New and improved example script
+
+There is a new and improved example script, that can be used to set
+up Babbles with only minimal configuration and no coding. It does not
+support all the bells and whistles of Babble, though.
+
+** New, OPML data source
+
+A new DataSource module, Babble::DataSource::OPML was added to the
+distribution. It can parse OPML documents, and collect the RSS feeds
+mentioned therein.
+
 * Babble 0.02 -- 2004-03-09
 
 ** Lots of documentation updates.

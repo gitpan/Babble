@@ -35,8 +35,9 @@ use Exporter ();
 use vars qw(@ISA);
 @ISA = qw(Babble::DataSource);
 
-
 =pod
+
+=head1 NAME
 
 Babble::DataSource::FlatFile - Flat file source fetcher for Babble
 

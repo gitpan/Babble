@@ -1,0 +1,199 @@
+#! /usr/bin/perl -w
+## babble - a simple Babble frontend script
+## Copyright (C) 2004 Gergely Nagy <algernon@bonehunter.rulez.org>
+##
+## This file is part of Babble.
+##
+## Babble is free software; you can redistribute it and/or modify it
+## under the terms of the GNU General Public License as published by
+## the Free Software Foundation; either version 2 of the License, or
+## (at your option) any later version.
+##
+## Babble is distributed in the hope that it will be useful, but WITHOUT
+## ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+## FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+## for more details.
+##
+## You should have received a copy of the GNU General Public License
+## along with this program; if not, write to the Free Software
+## Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+
+use strict;
+use Config::IniFiles;
+use Getopt::Long qw(:config no_ignore_case no_auto_abbrev);
+use Pod::Usage;
+
+use Babble;
+use Babble::DataSource::RSS;
+
+my $verbose = 0;
+my $man = 0;
+my $help = 0;
+my $version = 0;
+GetOptions (
+	'verbose|v+' => \$verbose,
+	'debug|d' => sub { $verbose = 2; },
+	'help|?' => \$help,
+	'version|V' => \$version,
+	'man' => \$man
+) or pod2usage (2);
+pod2usage (-exitstatus => 0, -verbose => 1) if $help;
+pod2usage (-exitstatus => 0, -verbose => 2) if $man;
+if ($version) {
+	print "babble (Babble " . $Babble::VERSION . ")\n";
+	exit 0;
+}
+
+print "Reading configuration from " . $ARGV[0] . " ...\n"
+	if ($verbose >= 2);
+
+my $cfg = Config::IniFiles->new (-file => $ARGV[0]);
+my @feeds = ();
+my @themes = ();
+my %babble_config = ();
+
+foreach my $param ($cfg->Parameters ('Babble')) {
+	$babble_config{$param} = $cfg->val ('Babble', $param);
+}
+
+print "Recording sources ...\n" if ($verbose >= 2);
+
+foreach my $feed ($cfg->Sections) {
+	next if ($feed =~ /^(theme|babble)/i);
+
+	push (@feeds, Babble::DataSource::RSS->new (
+		-location => $feed,
+		-id => $cfg->val ($feed, 'name')));
+}
+
+my $babble = Babble->new ();
+$babble->add_params (%babble_config);
+$babble->add_sources (@feeds);
+
+print "Collecting sources ...\n" if ($verbose >= 2);
+
+$babble->collect_feeds ();
+
+foreach my $theme (split (/ /, $babble_config{themes})) {
+	my %theme_config = ();
+	foreach my $param ($cfg->Parameters ("theme:" . $theme)) {
+		$theme_config{$param} = $cfg->val ("theme:" . $theme, $param);
+	}
+
+	if ($theme_config{theme}) {
+		$theme_config{-theme} = $theme_config{theme};
+	} else {
+		$theme_config{-theme} = $theme;
+	}
+
+	foreach my $format (split (/ /, $theme_config{formats})) {
+		my $file;
+
+		if ($theme_config{output}) {
+			$file = $theme_config{output};
+		} else {
+			$file = "index." . $format;
+		}
+
+		print "Generating " . $babble_config{output_dir} .
+			"/" . $file . " ...\n" if $verbose;
+
+		$theme_config{-format} = $format;
+		open (OUTF, ">" . $babble_config{output_dir} .
+			      "/" . $file);
+		print OUTF $babble->output (%theme_config);
+		close (OUTF);
+	}
+}
+
+=pod
+
+=head1 NAME
+
+babble - Simplistic Babble frontend
+
+=head1 SYNOPSIS
+
+babble [options] configfile
+
+=head1 DESCRIPTION
+
+The babble script is a simple wrapper around the core functionality of
+Babble. It can read a config file, which defines an aggregation and a
+set of output templates. Using this information, the script will
+generate static output.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<--debug>
+
+Enable debugging output, slightly more verbose than B<--verbose>.
+
+=item B<--help>
+
+Display a help message and exit.
+
+=item B<--verbose>
+
+Enable verbose mode, printing the current state of processing.
+
+=item B<--version>
+
+Print version information and exit.
+
+=back
+
+=head1 CONFIG FILE SYNTAX
+
+The configuration file syntax is pretty easy and
+straightforward. There are a few special sections, and so-called feed
+sections. The first and most important section is I<Babble>, which
+describes the current babble's basic properties. The script recognises
+the I<output_dir> and I<themes> variables under this section. All
+other variables will be used as parameters in the created Babble
+object.
+
+Then, there are the so-called theme descriptor sections. They all
+begin with a I<theme:> prefix, and the rest is one of the items in the
+I<Babble> section's I<themes> variable. That is, if the configration
+file says something like this:
+
+ [Babble]
+ themes = html rss20
+
+Then the two recognised theme descriptor sections are I<theme:html>
+and I<theme:rss20>. Each of these sections can contain a I<theme>
+variable (defaults to the name of the theme, ie I<html> and I<rss20>
+in our example), which specifies the theme to use; I<formats>, which
+selects the formats to use (some themes provide multiple output
+formats); and I<output>, the name of the output file.
+
+=head1 EXAMPLE
+
+ [Babble]
+ themes = html rss20
+ output_dir = output
+
+ [theme:html]
+ theme = planet_gray
+ output = index.html
+
+ [theme:rss20]
+ theme = XML
+ output = rss20.xml
+
+=head1 AUTHOR
+
+Gergely Nagy, algernon@bonehunter.rulez.org
+
+Bugs should be reported at L<http://bugs.bonehunter.rulez.org/babble>.
+
+=head1 SEE ALSO
+
+Babble
+
+=cut
+
+# arch-tag: 6ab4db9f-fab6-4947-a24d-34cab756e1d3

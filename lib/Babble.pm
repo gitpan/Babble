@@ -28,7 +28,7 @@ use Babble::Processors;
 use Exporter ();
 use vars qw($VERSION @ISA);
 
-$VERSION = '0.02';
+$VERSION = '0.03';
 @ISA = qw(Exporter);
 
 =pod
@@ -40,16 +40,18 @@ Babble - RSS Feed Aggregator and Blog engine
 =head1 SYNOPSIS
 
  use Babble;
- use Babble::DataSource::HTTP;
+ use Babble::DataSource::RSS;
 
  my $babble = Babble->new ();
 
  $babble->add_params (meta_title => "Example Babble");
- $babble->add_source (
-	Babble::DataSource::HTTP->new (
+ $babble->add_sources (
+	Babble::DataSource::RSS->new (
 		-id => "Gergely Nagy",
-		-user_agent => "Babble/0.01 (Example)",
-		-url => 'http://bonehunter.rulez.org/~algernon/blog/index.xml'
+		-location => 'http://bonehunter.rulez.org/~algernon/blog/index.xml',
+		-lwp => {
+			agent => "Babble/" . $Babble::VERSION . " (Example)"
+		}
         )
  );
  $babble->collect_feeds ();
@@ -65,10 +67,6 @@ is pretty simple, and only a few lines.
 
 However, would one want to add new feed item processor functions, that is.
 also trivial to accomplish.
-
-In the default install, two output types are provided: HTML via
-C<HTML::Template> and RSS via C<XML::RSS>. New formats are also trivial
-to add.
 
 =head1 METHODS
 

@@ -1,4 +1,4 @@
-## Babble/Theme/planet_ttk.pm
+## Babble/Theme/planet_gray.pm
 ## Copyright (C) 2004 Gergely Nagy <algernon@bonehunter.rulez.org>
 ##
 ## This file is part of Babble.
@@ -17,7 +17,7 @@
 ## along with this program; if not, write to the Free Software
 ## Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 
-package Babble::Theme::planet_ttk;
+package Babble::Theme::planet_gray;
 
 use strict;
 
@@ -34,11 +34,11 @@ use vars qw(@ISA);
 
 =head1 NAME
 
-Babble::Theme::planet_ttk - Planet inspired theme for Babble
+Babble::Theme::planet_gray - Planet inspired theme for Babble
 
 =head1 DESCRIPTION
 
-The planet theme was inspired by the L<http://www.planetapache.org/>
+The planet_gray theme was inspired by the L<http://www.planetapache.org/>
 and L<http://planet.twistedmatrix.com/> sites. Being a Template
 Toolkit based theme, it is quite powerful, and offers a lot of
 features.
@@ -148,20 +148,24 @@ date. This can be turned off with this knob.
 
 This method sets up parameters for the Babble::Output::TTK-E<gt>output
 method. It recognises only the I<-format> option, which determines
-which output format is used. Currently B<html>, B<foaf> and B<opml>
-are provided by the template.
+which output format is used. Currently only B<html> is provided by the
+template.
+
+Currently, I<-format> defaults to B<html>.
 
 =cut
 
 sub output {
 	my ($self, $babble, %params) = @_;
 
+	$params{-format} = "html" unless $params{-format};
+
 	$self->_merge_params
 		($babble, \%params,
 		 {
-			 -template => $self->_find_template ('planet_ttk',
+			 -template => $self->_find_template ('planet_gray',
 						     $params{-format}),
-			 meta_css_link => "planet_ttk.css",
+			 meta_css_link => "planet_gray.css",
 			 UnixDate => \&UnixDate
 		 }
 	 );

@@ -12,7 +12,11 @@
   <body>
     [% FOREACH item = collection.documents -%]
     [%- IF item.author -%][% tmp_author = item.author %][% ELSE %][% tmp_author = item.title %][% END -%]
-    <outline text="[% tmp_author %]" xmlUrl="[% item.link %]" />
+    <outline text="[% tmp_author %]"
+    	     xmlUrl="[% item.link %]"
+    	     htmlUrl="[% item.id %]"
+    	     title="[% item.title %]"
+	     description="[% item.content %]" />
     [% END %]
   </body>
 </opml>
